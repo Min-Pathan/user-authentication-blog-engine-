@@ -5,6 +5,7 @@ import logger from "./middlewares/logger.js";
 import pool from "./config/db.js";
 
 import userRoutes from "./routes/userRoutes.js"
+import blogRoutes from "./routes/blogRoutes.js"
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.get("/", (req, res)=>{
 })
 
 app.use("/api/users", userRoutes)
+app.use("/api/blogs", blogRoutes)
 
 pool.query("SELECT NOW()", (err, res) => {
   if (err) {
