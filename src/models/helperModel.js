@@ -1,3 +1,5 @@
+import pool from "../config/db.js";
+
 const getBlogByIdHelper = async (id) => {
 
   const query = `
