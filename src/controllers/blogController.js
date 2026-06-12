@@ -106,10 +106,11 @@ const getAllBlogsController = async (req, res) => {
 
     const blogs = await getAllBlogs(
       limit,
-      offset
+      offset, 
+      keyword
     );
 
-    const totalBlogs = await getBlogsCount();
+    const totalBlogs = await getBlogsCount(keyword);
 
     res.status(200).json({
       success: true,
@@ -119,7 +120,8 @@ const getAllBlogsController = async (req, res) => {
       totalPages: Math.ceil(
         totalBlogs / limit
       ),
-      blogs
+      count: blogs.length,
+      blogs,
     });
 
   } catch (error) {

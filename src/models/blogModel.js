@@ -25,47 +25,65 @@ const updateBlog = async (id, title, content) => {
 };
 
 const getAllBlogs = async (limit, offset, keyword) => {
-  let query = `
+  let whereClause = "";
+  const values = [];
+  let valueIndex = 1;
+
+  if (keyword) {
+    whereClause = `
+      WHERE blogs.title ILIKE $${valueIndex}
+      OR blogs.content ILIKE $${valueIndex}
+      OR users.username ILIKE $${valueIndex}
+    `;
+
+    values.push(`%${keyword}%`);
+    valueIndex++;
+  }
+
+  const query = `
     SELECT
       blogs.id,
       blogs.title,
       blogs.content,
       blogs.user_id,
+      blogs.created_at,
       users.username
     FROM blogs
     JOIN users
     ON blogs.user_id = users.id
+    ${whereClause}
+    ORDER BY blogs.created_at DESC
+    LIMIT $${valueIndex}
+    OFFSET $${valueIndex + 1}
   `;
 
-  const values = [];
-  if(keyword){
+  values.push(limit, offset);
 
-    query += `where blogs.title ILIKE $1 OR blogs.content ILIKE $1 `;
-  
-    values.push(`%${keyword}%`);
-  
-    query += `order by blogs.created_at desc limit $2 offset $3`;
-  
-    values.push(limit, offset);
-  }
-  else {
-
-    query += `
-      ORDER BY blogs.created_at DESC
-      LIMIT $1
-      OFFSET $2
-    `;
-
-    values.push(limit, offset);
-  }
-
-  const result = await pool.query(query, [limit, offset]);
+  const result = await pool.query(query, values);
 
   return result.rows;
 };
 
-const getBlogsCount = async () => {
-  const result = await pool.query(`SELECT COUNT(*) FROM blogs`);
+const getBlogsCount = async (keyword) => {
+  let whereClause = "";
+  const values = [];
+
+  if (keyword) {
+    whereClause = `
+      WHERE title ILIKE $1
+      OR content ILIKE $1
+    `;
+
+    values.push(`%${keyword}%`);
+  }
+
+  const query = `
+    SELECT COUNT(*)
+    FROM blogs
+    ${whereClause}
+  `;
+
+  const result = await pool.query(query, values);
 
   return parseInt(result.rows[0].count);
 };
