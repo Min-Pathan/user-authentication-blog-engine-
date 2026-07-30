@@ -47,10 +47,13 @@ const getAllBlogs = async (limit, offset, keyword) => {
       blogs.content,
       blogs.user_id,
       blogs.created_at,
-      users.username
+      users.username,
+      Count(likes.id) as like_count
     FROM blogs
     JOIN users
     ON blogs.user_id = users.id
+    left join likes on  blogs.id=likes.blog_id
+    group by blogs.id, users.username
     ${whereClause}
     ORDER BY blogs.created_at DESC
     LIMIT $${valueIndex}
@@ -61,7 +64,10 @@ const getAllBlogs = async (limit, offset, keyword) => {
 
   const result = await pool.query(query, values);
 
-  return result.rows;
+  return result.rows.map((blog) => ({
+    ...blog,
+    like_count: Number(blog.like_count)
+  }));
 };
 
 const getBlogsCount = async (keyword) => {
@@ -105,11 +111,19 @@ order by blogs.created_at desc;`;
 };
 
 const getBlogById = async (blogId) => {
-  const query = `select blogs.id, blogs.title, blogs.content, blogs.created_at, users.username, users.email
-  from blogs join users on blogs.user_id = users.id where blogs.id = $1`;
+  const query = `select blogs.id, blogs.title, blogs.content, blogs.created_at, users.username, users.email, count(likes.id) as like_count
+  from blogs join users on blogs.user_id = users.id 
+  left join likes on blogs.id = likes.blog_id where blogs.id = $1 group by blogs.id, users.username, users.email` ;
   const result = await pool.query(query, [blogId]);
 
-  return result.rows[0];
+  if (!result.rows[0]) {
+    return null;
+  }
+
+  return {
+    ...result.rows[0],
+    like_count: Number(result.rows[0]?.like_count),
+  };
 };
 
 const deleteBlog = async (blogId) => {

@@ -7,6 +7,7 @@ import pool from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js"
 import blogRoutes from "./routes/blogRoutes.js"
 import commentRoutes from "./routes/commentRoutes.js"
+import likeRoutes from "./routes/likeRoutes.js"
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.get("/", (req, res)=>{
 app.use("/api/users", userRoutes)
 app.use("/api/blogs", blogRoutes)
 app.use("/api/comments", commentRoutes)
+app.use("/api/likes", likeRoutes)
 
 pool.query("SELECT NOW()", (err, res) => {
   if (err) {

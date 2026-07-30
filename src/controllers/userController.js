@@ -11,8 +11,26 @@ import pool from "../config/db.js";
 
 const registerUser = async (req, res) => {
   try {
-    const { username, email, password, role } = req.body;
-
+    const { username, email, password } = req.body;
+    if (!username || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Username, email and password are required",
+      });
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid email",
+      });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters",
+      });
+    }
     const existingUser = await findUserByEmail(email);
     if (existingUser) {
       return res.status(400).json({
@@ -23,13 +41,11 @@ const registerUser = async (req, res) => {
 
     // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = await createUser(username, email, hashedPassword, role);
+    const newUser = await createUser(username, email, hashedPassword, "user");
     const safeUser = {
       id: newUser.id,
       username: newUser.username,
       email: newUser.email,
-      role: newUser.role,
     };
 
     res.status(201).json({
@@ -70,10 +86,16 @@ const loginUser = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "7d" },
     );
+    const safeUser = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+    };
     res.status(200).json({
       success: true,
-      message: "Login successful",
-      user,
+      message: "successful",
+      user: safeUser,
       token,
     });
   } catch (error) {
@@ -93,7 +115,6 @@ const profileUSer = (req, res) => {
       user: req.user,
     });
   } catch (error) {
-    console.log(error);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -117,7 +138,7 @@ const getAllUsers = async (req, res) => {
     let valueIndex = 1;
 
     if (keyword) {
-      whereClause = `WHERE username ILIKE $${valueIndex} OR email ILIKE $${valueIndex}`;
+      whereClause = `WHERE username ILIKE $$x{valueIndex} OR email ILIKE $${valueIndex}`;
       values.push(`%${keyword}%`);
       valueIndex++;
 
@@ -184,6 +205,13 @@ const getUserById = async (req, res) => {
 const updateUserController = async (req, res) => {
   try {
     const { id } = req.params;
+    const loggedInUser = req.user;
+    if (loggedInUser.role != "admin" && id != loggedInUser.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authrized to update this user",
+      });
+    }
 
     const { username, email } = req.body;
 
@@ -276,5 +304,5 @@ export {
   getAllUsers,
   getUserById,
   updateUserController,
-  deleteUserController
+  deleteUserController,
 };

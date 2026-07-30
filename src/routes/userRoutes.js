@@ -8,9 +8,9 @@ const router = express.Router();
 router.post("/register", registerUser);
 router.post("/login", loginUser)
 router.get("/profile", authMiddleware, roleMiddleWare("admin"), profileUSer)
-router.get("/", getAllUsers)
-router.get("/:id", getUserById)
-router.put("/:id", updateUserController)
-router.delete("/:id", deleteUserController)
+router.get("/", authMiddleware, roleMiddleWare("admin"), getAllUsers)
+router.get("/:id", authMiddleware ,getUserById)
+router.put("/:id", authMiddleware, updateUserController)
+router.delete("/:id", authMiddleware, roleMiddleWare('admin'), deleteUserController)
 
 export default router;

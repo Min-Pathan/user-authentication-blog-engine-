@@ -7,10 +7,7 @@ const router = express.Router();
 router.post("/createBlog", authMiddleware, createBlogsController);
 router.put("/:id", authMiddleware, updateBlogsController);
 router.get("/my-blogs", authMiddleware, getMyBlogsController)
-router.get(
-  "/:id/comments",
-  getCommentsByBlogIdController
-);
+router.get("/:id/comments", getCommentsByBlogIdController);
 router.get("/:id", getBlogByIdController);
 router.get("/", getAllBlogsController);
 router.delete("/:id", authMiddleware, deleteBlogController)
