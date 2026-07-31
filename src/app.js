@@ -3,11 +3,13 @@ import express from "express";
 import cors from "cors";
 import logger from "./middlewares/logger.js";
 import pool from "./config/db.js";
+import path from "path"
 
 import userRoutes from "./routes/userRoutes.js"
 import blogRoutes from "./routes/blogRoutes.js"
 import commentRoutes from "./routes/commentRoutes.js"
 import likeRoutes from "./routes/likeRoutes.js"
+import uploadRoutes from "./routes/uploadRoutes.js"
 
 const app = express();
 
@@ -25,6 +27,8 @@ app.use("/api/users", userRoutes)
 app.use("/api/blogs", blogRoutes)
 app.use("/api/comments", commentRoutes)
 app.use("/api/likes", likeRoutes)
+app.use("/api/uploads", uploadRoutes);
+app.use("/uploads", express.static(path.resolve("uploads")))
 
 pool.query("SELECT NOW()", (err, res) => {
   if (err) {

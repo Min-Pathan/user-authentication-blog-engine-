@@ -1,25 +1,37 @@
 import pool from "../config/db.js";
 
-const createBlogs = async (title, content, user_id) => {
-  const query = `Insert into blogs (title, content, user_id) 
-    values ($1, $2, $3) returning *`;
-  const values = [title, content, user_id];
+const createBlogs = async (title, content, user_id, mediaUrl, mediaType) => {
+  const query = `Insert into blogs (title, content, user_id,  media_url, media_type) 
+    values ($1, $2, $3, $4, $5) returning *`;
+  const values = [title, content, user_id, mediaUrl, mediaType,];
 
   const result = await pool.query(query, values);
   return result.rows[0];
 };
 
-const updateBlog = async (id, title, content) => {
+const updateBlog = async (id,
+  title,
+  content,
+  mediaUrl,
+  mediaType) => {
   const query = `
     UPDATE blogs
     SET
-      title = $1,
-      content = $2
-    WHERE id = $3
+     title = $1,
+      content = $2,
+      media_url = $3,
+      media_type = $4
+    WHERE id = $5
     RETURNING *;
   `;
 
-  const result = await pool.query(query, [title, content, id]);
+const result = await pool.query(query, [
+  title,
+  content,
+  mediaUrl,
+  mediaType,
+  id,
+]);
 
   return result.rows[0];
 };
@@ -46,6 +58,8 @@ const getAllBlogs = async (limit, offset, keyword) => {
       blogs.title,
       blogs.content,
       blogs.user_id,
+        blogs.media_url,
+      blogs.media_type,
       blogs.created_at,
       users.username,
       Count(likes.id) as like_count
@@ -111,9 +125,12 @@ order by blogs.created_at desc;`;
 };
 
 const getBlogById = async (blogId) => {
-  const query = `select blogs.id, blogs.title, blogs.content, blogs.created_at, users.username, users.email, count(likes.id) as like_count
+  const query = `select blogs.id, blogs.title, blogs.content, blogs.created_at, blogs.user_id,  blogs.media_url,
+      blogs.media_type,9++.
+      
+      6users.username, users.email, count(likes.id) as like_count
   from blogs join users on blogs.user_id = users.id 
-  left join likes on blogs.id = likes.blog_id where blogs.id = $1 group by blogs.id, users.username, users.email` ;
+  left join likes on blogs.id = likes.blog_id where blogs.id = $1 group by blogs.id, users.id` ;
   const result = await pool.query(query, [blogId]);
 
   if (!result.rows[0]) {
