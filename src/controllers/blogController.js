@@ -11,13 +11,13 @@ import getBlogByIdHelper from "../models/helperModel.js";
 
 const createBlogsController = async (req, res) => {
   try {
-    const { title, content } = req.body;
+    const { title, content, category_id } = req.body;
     const userId = req.user.id;
 
-    if (!title || !content) {
+    if (!title) {
       return res.status(400).json({
         success: false,
-        message: "Title and content are required",
+        message: "Title is required",
       });
     }
 
@@ -39,7 +39,8 @@ const createBlogsController = async (req, res) => {
       content,
       userId,
       mediaUrl,
-      mediaType
+      mediaType,
+      category_id
     );
 
     return res.status(201).json({
@@ -83,6 +84,7 @@ const updateBlogsController = async (req, res) => {
 
     const title = req.body.title ?? existingBlog.title;
     const content = req.body.content ?? existingBlog.content;
+    const category_id = req.body.category_id ?? existingBlog.category_id
 
     let mediaUrl = existingBlog.media_url;
     let mediaType = existingBlog.media_type;
@@ -113,7 +115,8 @@ const updateBlogsController = async (req, res) => {
       title,
       content,
       mediaUrl,
-      mediaType
+      mediaType,
+      category_id
     );
 
     return res.status(200).json({

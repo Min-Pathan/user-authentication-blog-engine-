@@ -10,6 +10,7 @@ import blogRoutes from "./routes/blogRoutes.js"
 import commentRoutes from "./routes/commentRoutes.js"
 import likeRoutes from "./routes/likeRoutes.js"
 import uploadRoutes from "./routes/uploadRoutes.js"
+import categoryRoutes from "./routes/categoryRoutes.js";
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use("/api/comments", commentRoutes)
 app.use("/api/likes", likeRoutes)
 app.use("/api/uploads", uploadRoutes);
 app.use("/uploads", express.static(path.resolve("uploads")))
+app.use("/api/categories", categoryRoutes);
 
 pool.query("SELECT NOW()", (err, res) => {
   if (err) {

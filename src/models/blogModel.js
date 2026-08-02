@@ -1,9 +1,9 @@
 import pool from "../config/db.js";
 
-const createBlogs = async (title, content, user_id, mediaUrl, mediaType) => {
-  const query = `Insert into blogs (title, content, user_id,  media_url, media_type) 
-    values ($1, $2, $3, $4, $5) returning *`;
-  const values = [title, content, user_id, mediaUrl, mediaType,];
+const createBlogs = async (title, content, user_id, mediaUrl, mediaType, category_id) => {
+  const query = `Insert into blogs (title, content, user_id,  media_url, media_type, category_id) 
+    values ($1, $2, $3, $4, $5, $6) returning *`;
+  const values = [title, content, user_id, mediaUrl, mediaType,category_id];
 
   const result = await pool.query(query, values);
   return result.rows[0];
@@ -13,15 +13,16 @@ const updateBlog = async (id,
   title,
   content,
   mediaUrl,
-  mediaType) => {
+  mediaType, category_id) => {
   const query = `
     UPDATE blogs
     SET
      title = $1,
       content = $2,
       media_url = $3,
-      media_type = $4
-    WHERE id = $5
+      media_type = $4,
+      category_id = $5
+    WHERE id = $6
     RETURNING *;
   `;
 
@@ -30,6 +31,7 @@ const result = await pool.query(query, [
   content,
   mediaUrl,
   mediaType,
+  category_id,
   id,
 ]);
 
@@ -52,27 +54,32 @@ const getAllBlogs = async (limit, offset, keyword) => {
     valueIndex++;
   }
 
-  const query = `
-    SELECT
-      blogs.id,
-      blogs.title,
-      blogs.content,
-      blogs.user_id,
-        blogs.media_url,
-      blogs.media_type,
-      blogs.created_at,
-      users.username,
-      Count(likes.id) as like_count
-    FROM blogs
-    JOIN users
+const query = `
+  SELECT
+    blogs.id,
+    blogs.title,
+    blogs.content,
+    blogs.user_id,
+    blogs.media_url,
+    blogs.media_type,
+    blogs.category_id,
+    blogs.created_at,
+    users.username,
+    COUNT(DISTINCT likes.id) AS like_count,
+    COUNT(DISTINCT comments.id) AS comment_count
+  FROM blogs
+  JOIN users
     ON blogs.user_id = users.id
-    left join likes on  blogs.id=likes.blog_id
-    group by blogs.id, users.username
-    ${whereClause}
-    ORDER BY blogs.created_at DESC
-    LIMIT $${valueIndex}
-    OFFSET $${valueIndex + 1}
-  `;
+  LEFT JOIN likes
+    ON blogs.id = likes.blog_id
+  LEFT JOIN comments
+    ON blogs.id = comments.blog_id
+  ${whereClause}
+  GROUP BY blogs.id, users.username
+  ORDER BY blogs.created_at DESC
+  LIMIT $${valueIndex}
+  OFFSET $${valueIndex + 1}
+`;
 
   values.push(limit, offset);
 
@@ -80,7 +87,8 @@ const getAllBlogs = async (limit, offset, keyword) => {
 
   return result.rows.map((blog) => ({
     ...blog,
-    like_count: Number(blog.like_count)
+    like_count: Number(blog.like_count),
+    comment_count:Number(blog.comment_count)
   }));
 };
 
@@ -125,10 +133,8 @@ order by blogs.created_at desc;`;
 };
 
 const getBlogById = async (blogId) => {
-  const query = `select blogs.id, blogs.title, blogs.content, blogs.created_at, blogs.user_id,  blogs.media_url,
-      blogs.media_type,9++.
-      
-      6users.username, users.email, count(likes.id) as like_count
+  const query = `select blogs.id, blogs.title, blogs.content, blogs.created_at, blogs.user_id, blogs.category_id,  blogs.media_url,
+      blogs.media_type,users.username, users.email, count(likes.id) as like_count
   from blogs join users on blogs.user_id = users.id 
   left join likes on blogs.id = likes.blog_id where blogs.id = $1 group by blogs.id, users.id` ;
   const result = await pool.query(query, [blogId]);
