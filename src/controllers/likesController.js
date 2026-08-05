@@ -1,3 +1,4 @@
+import AppError from "../Errors/AppError.js";
 import { getBlogById } from "../models/blogModel.js";
 import {
   findLike,
@@ -7,7 +8,7 @@ import {
   getLikeStatus,
 } from "../models/likeModel.js";
 
-const toggleLikeController = async (req, res) => {
+const toggleLikeController = async (req, res, next) => {
   try {
     const { blogId } = req.params;
     const userId = req.user.id;
@@ -15,10 +16,7 @@ const toggleLikeController = async (req, res) => {
     const blog = await getBlogById(blogId);
 
     if (!blog) {
-      return res.status(404).json({
-        success: false,
-        message: "Blog not found",
-      });
+      throw new AppError("Blog not found", 404)
     }
 
     const existingLike = await findLike(userId, blogId);
@@ -42,10 +40,7 @@ const toggleLikeController = async (req, res) => {
       like,
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    next(error)
   }
 };
 

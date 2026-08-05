@@ -1,39 +1,45 @@
 import pool from "../config/db.js";
 
-const createBlogs = async (title, content, user_id, mediaUrl, mediaType, category_id) => {
-  const query = `Insert into blogs (title, content, user_id,  media_url, media_type, category_id) 
-    values ($1, $2, $3, $4, $5, $6) returning *`;
-  const values = [title, content, user_id, mediaUrl, mediaType,category_id];
+const createBlogs = async (title, content, user_id, mediaUrl, mediaType, mediaPublicId, category_id) => {
+  const query = `Insert into blogs (title, content, user_id,  media_url, media_type, media_public_id, category_id) 
+    values ($1, $2, $3, $4, $5, $6, $7) returning *`;
+  const values = [title, content, user_id, mediaUrl, mediaType, mediaPublicId, category_id];
 
   const result = await pool.query(query, values);
   return result.rows[0];
 };
 
-const updateBlog = async (id,
-  title,
-  content,
-  mediaUrl,
-  mediaType, category_id) => {
-  const query = `
-    UPDATE blogs
-    SET
-     title = $1,
-      content = $2,
-      media_url = $3,
-      media_type = $4,
-      category_id = $5
-    WHERE id = $6
-    RETURNING *;
-  `;
-
-const result = await pool.query(query, [
+const updateBlog = async (
+  id,
   title,
   content,
   mediaUrl,
   mediaType,
-  category_id,
-  id,
-]);
+  mediaPublicId,
+  categoryId
+) => {
+  const query = `
+    UPDATE blogs
+    SET
+      title = $1,
+      content = $2,
+      media_url = $3,
+      media_type = $4,
+      media_public_id = $5,
+      category_id = $6
+    WHERE id = $7
+    RETURNING *;
+  `;
+
+  const result = await pool.query(query, [
+    title,
+    content,
+    mediaUrl,
+    mediaType,
+    mediaPublicId,
+    categoryId,
+    id,
+  ]);
 
   return result.rows[0];
 };
@@ -54,7 +60,7 @@ const getAllBlogs = async (limit, offset, keyword) => {
     valueIndex++;
   }
 
-const query = `
+  const query = `
   SELECT
     blogs.id,
     blogs.title,
@@ -62,6 +68,7 @@ const query = `
     blogs.user_id,
     blogs.media_url,
     blogs.media_type,
+    blogs.media_public_id,
     blogs.category_id,
     blogs.created_at,
     users.username,
@@ -88,7 +95,7 @@ const query = `
   return result.rows.map((blog) => ({
     ...blog,
     like_count: Number(blog.like_count),
-    comment_count:Number(blog.comment_count)
+    comment_count: Number(blog.comment_count)
   }));
 };
 
@@ -133,7 +140,7 @@ order by blogs.created_at desc;`;
 };
 
 const getBlogById = async (blogId) => {
-  const query = `select blogs.id, blogs.title, blogs.content, blogs.created_at, blogs.user_id, blogs.category_id,  blogs.media_url,
+  const query = `select blogs.id, blogs.title, blogs.content, blogs.created_at, blogs.user_id, blogs.category_id,  blogs.media_url, blogs.media_public_id,
       blogs.media_type,users.username, users.email, count(likes.id) as like_count
   from blogs join users on blogs.user_id = users.id 
   left join likes on blogs.id = likes.blog_id where blogs.id = $1 group by blogs.id, users.id` ;
@@ -149,13 +156,17 @@ const getBlogById = async (blogId) => {
   };
 };
 
-const deleteBlog = async (blogId) => {
-  const query = `delete from blogs where blogs.id=$1`;
-  const result = await pool.query(query, [blogId]);
+const deleteBlog = async (id) => {
+  const query = `
+    DELETE FROM blogs
+    WHERE id = $1
+    RETURNING *;
+  `;
 
-  return (await result).rows[0];
+  const result = await pool.query(query, [id]);
+
+  return result.rows[0];
 };
-
 export {
   createBlogs,
   getAllBlogs,

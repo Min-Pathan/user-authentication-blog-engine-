@@ -1,3 +1,4 @@
+import AppError from "../Errors/AppError.js";
 import { getBlogById } from "../models/blogModel.js";
 import {
   createComment,
@@ -29,7 +30,7 @@ const getCommentsByBlogIdController = async(req, res)=>{
 
 const createcommentController = async (req, res) => {
   try {
-    const { comment, blog_id } = req.body;
+    const { comment, blog_id } = req.validateData;
     const user_id = req.user.id;
     if (!comment || comment.trim() === "") {
       return res.status(400).json({
@@ -38,31 +39,9 @@ const createcommentController = async (req, res) => {
       });
     }
 
-    if (comment.trim().length < 2) {
-      return res.status(400).json({
-        success: false,
-        message: "Comment must be at least 2 characters",
-      });
-    }
-
-    if (comment.length > 200) {
-      return res.status(400).json({
-        success: false,
-        message: "Comment cannot exceed 200 characters",
-      });
-    }
-
-    if (!blog_id) {
-      return res.status(400).json({
-        success: false,
-        message: "Blog is required",
-      });
-    }
     const blogExists = await getBlogById(blog_id);
     if (!blogExists) {
-      return res.status(404).json({
-        message: "Blog not found",
-      });
+     throw new AppError("Blog not found", 404)
     }
     const newComment = await createComment(comment, user_id, blog_id);
     return res.status(201).json({
@@ -70,36 +49,24 @@ const createcommentController = async (req, res) => {
       comment: newComment,
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    next(error)
   }
 };
 
-const getCommentByIdController = async (req, res) => {
+const getCommentByIdController = async (req, res, next) => {
   try {
     const { id } = req.params;
     const comment = await getCommentById(id);
-    if (!comment) {
-      return res.status(404).json({
-        success: false,
-        message: "Comment not found",
-      });
-    }
     return res.status(200).json({
       success: true,
       comment,
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+   next(error)
   }
 };
 
-const updateCommentController = async (req, res) => {
+const updateCommentController = async (req, res, next) => {
   try {
     const { comment } = req.body;
     const id = req.params.id;
@@ -133,10 +100,7 @@ const updateCommentController = async (req, res) => {
       comment: updatedComment,
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  next(error)
   }
 };
 

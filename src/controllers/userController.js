@@ -8,10 +8,11 @@ import {
 } from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 import pool from "../config/db.js";
+import AppError from "../Errors/AppError.js";
 
-const registerUser = async (req, res) => {
+const registerUser = async (req, res, next) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password } = req.validatedData;
     if (!username || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -32,11 +33,9 @@ const registerUser = async (req, res) => {
       });
     }
     const existingUser = await findUserByEmail(email);
+
     if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "Email already exists",
-      });
+      throw new AppError("Email already exists", 409);
     }
 
     // hash password
@@ -53,31 +52,23 @@ const registerUser = async (req, res) => {
       user: safeUser,
     });
   } catch (error) {
-    console.log(error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    return next(error);
   }
 };
 
-const loginUser = async (req, res) => {
+const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const user = await findUserByEmail(email);
     if (!user) {
-      return res.status(401).json({
-        message: "Invalid credentials",
-      });
+      throw new AppError("Invalid credentials", 401);
     }
+
     const isPasswordMatched = await bcrypt.compare(password, user.password);
     if (!isPasswordMatched) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid credentials",
-      });
+      throw new AppError("Invalid credentials", 401);
     }
+
     const token = jwt.sign(
       {
         id: user.id,
@@ -99,12 +90,7 @@ const loginUser = async (req, res) => {
       token,
     });
   } catch (error) {
-    console.log(error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    return next(error);
   }
 };
 
@@ -117,7 +103,7 @@ const profileUSer = (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: error,
     });
   }
 };
@@ -266,7 +252,7 @@ const updateUserController = async (req, res) => {
       RETURNING id, username, email, role
     `;
 
-    const result = await pool.query(query, values);
+    const result = await updateUSer(query, values);
 
     return res.status(200).json({
       success: true,
@@ -288,6 +274,7 @@ const deleteUserController = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "User deleted successfully",
+      result
     });
   } catch (err) {
     return res.status(500).json({

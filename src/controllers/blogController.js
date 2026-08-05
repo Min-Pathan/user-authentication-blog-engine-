@@ -1,3 +1,5 @@
+import fs from "fs";
+
 import {
   createBlogs,
   deleteBlog,
@@ -7,58 +9,60 @@ import {
   getMyBlogs,
   updateBlog,
 } from "../models/blogModel.js";
-import getBlogByIdHelper from "../models/helperModel.js";
 
-const createBlogsController = async (req, res) => {
+import AppError from '../Errors/AppError.js'
+import { deleteFromCloudinary, uploadToCloudinary } from "../utils/cloudinaryUpload.js";
+
+const createBlogsController = async (req, res, next) => {
   try {
-    const { title, content, category_id } = req.body;
+    const { title, content, category_id } = req.validatedData ?? req.body;
     const userId = req.user.id;
-
-    if (!title) {
-      return res.status(400).json({
-        success: false,
-        message: "Title is required",
-      });
-    }
 
     let mediaUrl = null;
     let mediaType = null;
+    let mediaPublicId = null;
 
     if (req.file) {
-      mediaUrl = `/uploads/blog-media/${req.file.filename}`;
+      const cloudinaryResult = await uploadToCloudinary(
+        req.file.path
+      )
 
-      if (req.file.mimetype.startsWith("image/")) {
-        mediaType = "image";
-      } else if (req.file.mimetype.startsWith("video/")) {
-        mediaType = "video";
+      mediaUrl = cloudinaryResult.secureUrl;
+      mediaType = cloudinaryResult.resourceType;
+      mediaPublicId = cloudinaryResult.publicId;
+
+      if (fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path)
       }
     }
 
-    const blog = await createBlogs(
+    const newBlog = await createBlogs(
       title,
       content,
       userId,
       mediaUrl,
       mediaType,
+      mediaPublicId,
       category_id
     );
 
     return res.status(201).json({
       success: true,
       message: "Blog created successfully",
-      blog,
+      blog: newBlog,
     });
   } catch (error) {
-    console.error("Create blog error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    if (req.file?.path && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    return next(error);
   }
 };
 
-const updateBlogsController = async (req, res) => {
+const updateBlogsController = async (req, res, next) => {
+  let newPublicId = null;
+  let newResourceType = null;
+
   try {
     const { id } = req.params;
     const userId = req.user.id;
@@ -66,58 +70,89 @@ const updateBlogsController = async (req, res) => {
     const existingBlog = await getBlogById(id);
 
     if (!existingBlog) {
-      return res.status(404).json({
-        success: false,
-        message: "Blog not found",
-      });
+      throw new AppError("Blog not found", 404);
     }
 
     if (
-      Number(existingBlog.user_id) !== Number(userId)
+      Number(existingBlog.user_id) !== Number(userId) &&
+      req.user.role !== "admin"
     ) {
-      console.log("yess")
-      return res.status(403).json({
-        success: false,
-        message: "You are not allowed to update this blog",
-      });
+      throw new AppError(
+        "You are not allowed to update this blog",
+        403
+      );
     }
 
-    const title = req.body.title ?? existingBlog.title;
-    const content = req.body.content ?? existingBlog.content;
-    const category_id = req.body.category_id ?? existingBlog.category_id
+    // Use Zod-cleaned data after validation
+    const data = req.validatedData ?? req.body;
+
+    const title = data.title ?? existingBlog.title;
+    const content = data.content ?? existingBlog.content;
+    const categoryId =
+      data.category_id ?? existingBlog.category_id;
 
     let mediaUrl = existingBlog.media_url;
     let mediaType = existingBlog.media_type;
+    let mediaPublicId = existingBlog.media_public_id;
 
+    const oldPublicId = existingBlog.media_public_id;
+    const oldMediaType = existingBlog.media_type;
+
+const removeMedia = data.remove_media === true;
+
+      if (req.file && removeMedia) {
+      throw new AppError(
+        "Choose either a new media file or remove the existing media",
+        400
+      );
+    }
+//case 1 : replace existing file
     if (req.file) {
-      mediaUrl = `/uploads/blog-media/${req.file.filename}`;
+      const uploadedMedia = await uploadToCloudinary(
+        req.file.path
+      );
 
-      if (req.file.mimetype.startsWith("image/")) {
-        mediaType = "image";
-      } else if (req.file.mimetype.startsWith("video/")) {
-        mediaType = "video";
-      }
+      mediaUrl = uploadedMedia.secureUrl;
+      mediaType = uploadedMedia.resourceType;
+      mediaPublicId = uploadedMedia.publicId;
 
-      if (existingBlog.media_url) {
-        const oldFilePath = path.join(
-          process.cwd(),
-          existingBlog.media_url
-        );
+      newPublicId = uploadedMedia.publicId;
+      newResourceType = uploadedMedia.resourceType;
 
-        if (fs.existsSync(oldFilePath)) {
-          fs.unlinkSync(oldFilePath);
-        }
+      if (fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
       }
     }
 
+    //case 2: remove exiting file
+    if(removeMedia){
+      mediaUrl=null
+      mediaType=null;
+      mediaPublicId=null
+    }
+
+    console.log("req.body:", req.body);
+console.log("req.validatedData:", req.validatedData);
     const updatedBlog = await updateBlog(
       id,
       title,
       content,
       mediaUrl,
       mediaType,
-      category_id
+      mediaPublicId,
+      categoryId
     );
+
+    console.log("validated data:", data);
+console.log("removeMedia:", removeMedia, typeof removeMedia);
+
+    // Delete old Cloudinary asset only after DB update succeeds
+    if ((req.file || removeMedia) && oldPublicId) {
+      await deleteFromCloudinary(
+        oldPublicId,
+        oldMediaType || "image"
+      );
+    }
 
     return res.status(200).json({
       success: true,
@@ -125,53 +160,77 @@ const updateBlogsController = async (req, res) => {
       blog: updatedBlog,
     });
   } catch (error) {
-    console.error("Update blog error:", error);
+    // Remove temporary local file
+    if (req.file?.path && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
 
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    if (newPublicId) {
+      try {
+        await deleteFromCloudinary(
+          newPublicId,
+          newResourceType || "image"
+        );
+      } catch (cleanupError) {
+        console.error(
+          "New Cloudinary media cleanup failed:",
+          cleanupError.message
+        );
+      }
+    }
+
+    return next(error);
   }
 };
 
-const deleteBlogController = async (req, res) => {
+const deleteBlogController = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const user_id = req.user.id;
-    const existingBlog = await getBlogByIdHelper(id);
+    const userId = req.user.id;
+
+    const existingBlog = await getBlogById(id);
+
     if (!existingBlog) {
-      return res.status(404).json({
-        success: false,
-        message: "Blog not found",
-      });
+      throw new AppError("Blog not found", 404);
     }
-    if (Number(existingBlog.user_id) !== Number(user_id)) {
-      return res.status(403).json({
-        success: false,
-        message: "You can only delete your own blog",
-      });
+
+    if (
+      Number(existingBlog.user_id) !== Number(userId) &&
+      req.user.role !== "admin"
+    ) {
+      throw new AppError(
+        "You are not allowed to delete this blog",
+        403
+      );
     }
-    const result = await deleteBlog(id);
-    if(existingBlog.media_url){
-      const relativeMediaPath = existingBlog.media_url.replace(/^\/+/, "");
-      const mediaPath = path.join(
-        process.cwd(),
-        relativeMediaPath
-      )
-       if (fs.existsSync(mediaPath)) {
-        fs.unlinkSync(mediaPath);
+
+    const deletedBlog = await deleteBlog(id);
+
+    if (existingBlog.media_public_id) {
+      try {
+        await deleteFromCloudinary(
+          existingBlog.media_public_id,
+          existingBlog.media_type
+        );
+      } catch (cloudinaryError) {
+        /*
+          Blog is already deleted from DB.
+          Log Cloudinary failure so it can be cleaned later.
+        */
+        console.error(
+          "Failed to delete Cloudinary media:",
+          cloudinaryError.message
+        );
       }
     }
-   return res.status(200).json({
+
+    return res.status(200).json({
       success: true,
       message: "Blog deleted successfully",
       blog: deletedBlog,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    return next(error);
   }
 };
 
@@ -225,7 +284,8 @@ const getMyBlogsController = async (req, res) => {
       count: blogs.length,
       blogs,
     });
-  } catch (error) {
+  }
+  catch (error) {
     res.status(500).json({
       success: false,
       message: error.message,
@@ -233,15 +293,12 @@ const getMyBlogsController = async (req, res) => {
   }
 };
 
-const getBlogByIdController = async (req, res) => {
+const getBlogByIdController = async (req, res, next) => {
   try {
     const { id } = req.params;
     const blog = await getBlogById(id);
     if (!blog) {
-      return res.status(404).json({
-        success: false,
-        message: "Blog not found",
-      });
+      throw new AppError('Blog not found', 404)
     }
 
     return res.status(200).json({
@@ -249,10 +306,8 @@ const getBlogByIdController = async (req, res) => {
       blog,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    console.log(error)
+    next(error)
   }
 };
 

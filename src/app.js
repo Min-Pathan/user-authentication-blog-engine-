@@ -11,12 +11,35 @@ import commentRoutes from "./routes/commentRoutes.js"
 import likeRoutes from "./routes/likeRoutes.js"
 import uploadRoutes from "./routes/uploadRoutes.js"
 import categoryRoutes from "./routes/categoryRoutes.js";
+import errorMiddleware from "./middlewares/errorMiddleware.js";
+import notFoundMiddleware from "./middlewares/notFoundMiddleware.js"
+import helmet from "helmet";
+import apiLimiter from "./middlewares/rateLimitMiddleware.js";
+import hpp from "hpp";
 
 const app = express();
 
-app.use(cors())
-app.use(express.json())
+app.use(cors({
+  origin : process.env.CLIENT_URL,
+  credentials:true,
+  methods:[
+     "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "PATCH",
+  ]
+}))
+app.use(helmet())
+app.use(hpp())
+app.use(apiLimiter)
+app.use(
+  express.json({
+    limit: "10mb",
+  })
+);
 app.use(logger)
+
 
 app.get("/", (req, res)=>{
     res.status(200).json({
@@ -32,6 +55,9 @@ app.use("/api/uploads", uploadRoutes);
 app.use("/uploads", express.static(path.resolve("uploads")))
 app.use("/api/categories", categoryRoutes);
 
+app.use(notFoundMiddleware);
+
+app.use(errorMiddleware)
 pool.query("SELECT NOW()", (err, res) => {
   if (err) {
     console.log("Database connection error:", err);
