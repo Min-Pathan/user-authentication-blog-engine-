@@ -3,20 +3,20 @@ const theme = createTheme({
     palette: {
         mode: "light",
         primary: {
-            main: "#5B5BD6",
-            dark: "#4646B8",
-            light: "#7C7CE5",
+            main: "#2563EB",
+            dark: "#1D4ED8",
+            light: "#60A5FA",
         },
         secondary: {
             main: "#FF7A59",
         },
         background: {
-            default: "#F7F7FB",
+            default: "#F8FAFC",
             paper: "#FFFFFF",
         },
         text: {
             primary: "#18181B",
-            secondary: "#6B7280",
+            secondary: "#64748B",
         },
     },
     typography: {
