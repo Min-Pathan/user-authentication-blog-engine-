@@ -2,6 +2,8 @@ import {
   Box,
 } from "@mui/material";
 import Navbar from "./components/navigation/Navbar";
+import HeroSection from "./components/home/HeroSection";
+import CategoryFilter from "./components/home/CategoryFilter";
 
 function App() {
   return (
@@ -11,7 +13,9 @@ function App() {
         bgcolor: "background.default",
       }}
     >
-      <Navbar/>
+      <Navbar />
+      <HeroSection />
+      <CategoryFilter />
     </Box>
   );
 }
