@@ -2,13 +2,14 @@ import { Box, Chip, Container, Stack, Typography } from "@mui/material"
 import { useState } from "react"
 
 const categories = [
-    "All",
-    "Programming",
-    "Health",
-    "Education",
-    "Career",
-    "Design",
-]
+  "All",
+  "React",
+  "JavaScript",
+  "Node.js",
+  "Career",
+  "Design",
+];
+
 const CategoryFilter = () => {
     const [selectedCategory, setSelectedCategory] = useState("All")
     const handleCategoryChange = (category) => {
