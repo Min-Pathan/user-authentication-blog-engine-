@@ -1,3 +1,4 @@
+import { NavLink } from "react-router";
 import { useState } from "react";
 
 import MenuIcon from "@mui/icons-material/Menu";
@@ -20,11 +21,22 @@ import {
 } from "@mui/material";
 
 const navItems = [
-  "Home",
-  "Blogs",
-  "Categories",
-  "About",
-  "Contact",
+  {
+    label: "Home",
+    path: "/",
+  },
+  {
+    label: "Blogs",
+    path: "/blogs",
+  },
+  {
+    label: "About",
+    path: "/about",
+  },
+  {
+    label: "Contact",
+    path: "/contact",
+  },
 ];
 
 function Navbar() {
@@ -93,18 +105,18 @@ function Navbar() {
             >
               {navItems.map((item) => (
                 <Button
-                  key={item}
+                  key={item.path}
+                  component={NavLink}
+                  to={item.path}
                   color="inherit"
                   sx={{
-                    color:
-                      item === "Home"
-                        ? "primary.main"
-                        : "text.secondary",
+                    color: "text.secondary",
+                    fontWeight: 500,
 
-                    fontWeight:
-                      item === "Home"
-                        ? 600
-                        : 500,
+                    "&.active": {
+                      color: "primary.main",
+                      fontWeight: 600,
+                    },
 
                     "&:hover": {
                       color: "primary.main",
@@ -112,7 +124,7 @@ function Navbar() {
                     },
                   }}
                 >
-                  {item}
+                  {item.label}
                 </Button>
               ))}
             </Stack>
@@ -133,6 +145,8 @@ function Navbar() {
             >
               <Button
                 variant="text"
+                component={NavLink}
+                to="/login"
                 sx={{
                   color: "text.primary",
                 }}
@@ -143,6 +157,8 @@ function Navbar() {
               <Button
                 variant="contained"
                 disableElevation
+                component={NavLink}
+                to="/register"
               >
                 Register
               </Button>
@@ -230,16 +246,19 @@ function Navbar() {
           <List disablePadding>
             {navItems.map((item) => (
               <ListItemButton
-                key={item}
+                key={item.path}
+                component={NavLink}
+                to={item.path}
                 onClick={handleCloseDrawer}
                 sx={{
                   borderRadius: 2,
                   mb: 0.5,
+                  color: "text.primary",
 
-                  color:
-                    item === "Home"
-                      ? "primary.main"
-                      : "text.primary",
+                  "&.active": {
+                    bgcolor: "#EFF6FF",
+                    color: "primary.main",
+                  },
 
                   "&:hover": {
                     bgcolor: "action.hover",
@@ -248,12 +267,9 @@ function Navbar() {
                 }}
               >
                 <ListItemText
-                  primary={item}
+                  primary={item.label}
                   primaryTypographyProps={{
-                    fontWeight:
-                      item === "Home"
-                        ? 600
-                        : 500,
+                    fontWeight: 500,
                   }}
                 />
               </ListItemButton>
@@ -269,6 +285,9 @@ function Navbar() {
           {/* Mobile Auth Buttons */}
           <Stack spacing={1.5}>
             <Button
+              component={NavLink}
+              to="/login"
+              onClick={handleCloseDrawer}
               variant="outlined"
               fullWidth
             >
@@ -276,6 +295,9 @@ function Navbar() {
             </Button>
 
             <Button
+              component={NavLink}
+              to="/register"
+              onClick={handleCloseDrawer}
               variant="contained"
               fullWidth
               disableElevation
