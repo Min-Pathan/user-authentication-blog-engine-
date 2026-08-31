@@ -6,8 +6,11 @@ import HeroSection from "./components/home/HeroSection";
 import CategoryFilter from "./components/home/CategoryFilter";
 import mockBlogs from "./mocks/blogs";
 import LatestStories from "./components/home/LatestStories";
+import FeaturedStory from "./components/home/FeaturedStory";
 
 function App() {
+    const featuredBlog = mockBlogs[0];
+
   return (
     <Box
       sx={{
@@ -18,7 +21,9 @@ function App() {
       <Navbar />
       <HeroSection />
       <CategoryFilter />
-      <LatestStories blogs={mockBlogs} />
+      <FeaturedStory blog={featuredBlog} />
+
+     <LatestStories blogs={mockBlogs.slice(1)} />
     </Box>
   );
 }
