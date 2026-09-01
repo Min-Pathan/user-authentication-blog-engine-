@@ -1,7 +1,7 @@
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-
+import { Link } from "react-router";
 import {
   Avatar,
   Box,
@@ -15,6 +15,7 @@ import {
 
 function FeaturedStory({ blog }) {
   const {
+    id,
     title,
     content,
     category,
@@ -299,6 +300,8 @@ function FeaturedStory({ blog }) {
               </Stack>
 
               <Button
+                component={Link}
+                to={`/blogs/${id}`}
                 variant="contained"
                 endIcon={<ArrowForwardIcon />}
                 disableElevation

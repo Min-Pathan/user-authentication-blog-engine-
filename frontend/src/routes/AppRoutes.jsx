@@ -8,6 +8,7 @@ import LoginPage from '../pages/LoginPage'
 import ContactPage from '../pages/ContactPage'
 import AboutPage from '../pages/AboutPage'
 import BlogsPage from '../pages/BlogsPage'
+import BlogDetailsPage from '../pages/BlogDetailsPage'
 
 const AppRoutes = () => {
     return (
@@ -18,6 +19,11 @@ const AppRoutes = () => {
                 <Route
                     path="/blogs"
                     element={<BlogsPage />}
+                />
+
+                <Route
+                    path="/blogs/:id"
+                    element={<BlogDetailsPage />}
                 />
 
                 <Route

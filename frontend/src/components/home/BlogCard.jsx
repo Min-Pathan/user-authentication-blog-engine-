@@ -11,9 +11,11 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { Link } from "react-router";
 
 function BlogCard({ blog }) {
   const {
+    id,
     title,
     content,
     category,
@@ -140,22 +142,30 @@ function BlogCard({ blog }) {
           }}
         />
 
-        <Typography
-          component="h2"
-          variant="h6"
-          sx={{
-            fontWeight: 700,
-            lineHeight: 1.35,
+       <Typography
+  component={Link}
+  to={`/blogs/${id}`}
+  variant="h6"
+  sx={{
+    color: "text.primary",
+    textDecoration: "none",
+    fontWeight: 700,
+    lineHeight: 1.35,
 
-            display: "-webkit-box",
-            WebkitLineClamp: 2 ,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-          }}
-        >
-          {title}
-        </Typography>
+    display: "-webkit-box",
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: "vertical",
+    overflow: "hidden",
 
+    transition: "color 0.2s ease",
+
+    "&:hover": {
+      color: "primary.main",
+    },
+  }}
+>
+  {title}
+</Typography>
         <Typography
           color="text.secondary"
           sx={{
