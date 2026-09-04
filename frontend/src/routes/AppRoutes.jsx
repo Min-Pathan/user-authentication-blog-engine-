@@ -10,6 +10,11 @@ import AboutPage from '../pages/AboutPage'
 import BlogsPage from '../pages/BlogsPage'
 import BlogDetailsPage from '../pages/BlogDetailsPage'
 
+import DashboardLayout from "../layouts/DashboardLayout.jsx";
+
+import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
+import MyBlogsPage from "../pages/dashboard/MyBlogsPage.jsx";
+
 const AppRoutes = () => {
     return (
         <Routes>
@@ -49,6 +54,20 @@ const AppRoutes = () => {
                 <Route
                     path="*"
                     element={<NotFoundPage />}
+                />
+            </Route>
+            <Route
+                path="/dashboard"
+                element={<DashboardLayout />}
+            >
+                <Route
+                    index
+                    element={<DashboardPage />}
+                />
+
+                <Route
+                    path="my-blogs"
+                    element={<MyBlogsPage />}
                 />
             </Route>
         </Routes>
