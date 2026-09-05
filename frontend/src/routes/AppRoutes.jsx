@@ -14,6 +14,9 @@ import DashboardLayout from "../layouts/DashboardLayout.jsx";
 
 import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
 import MyBlogsPage from "../pages/dashboard/MyBlogsPage.jsx";
+import CreateBlogPage from "../pages/dashboard/CreateBlogPage.jsx";
+import EditBlogPage from "../pages/dashboard/EditBlogPage.jsx";
+import ProfilePage from '../pages/dashboard/ProfilePage.jsx'
 
 const AppRoutes = () => {
     return (
@@ -68,6 +71,19 @@ const AppRoutes = () => {
                 <Route
                     path="my-blogs"
                     element={<MyBlogsPage />}
+                />
+                <Route
+                    path="create"
+                    element={<CreateBlogPage />}
+                />
+
+                <Route
+                    path="blogs/:id/edit"
+                    element={<EditBlogPage />}
+                />
+                <Route
+                    path="profile"
+                    element={<ProfilePage />}
                 />
             </Route>
         </Routes>

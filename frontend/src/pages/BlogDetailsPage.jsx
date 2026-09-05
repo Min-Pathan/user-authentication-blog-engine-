@@ -1,5 +1,5 @@
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 
 import {
@@ -16,9 +16,12 @@ import {
 import { Link, useParams } from "react-router";
 
 import mockBlogs from "../mocks/blogs.js";
+import { useState } from "react";
+import CommentsSection from "../components/comments/CommentsSection.jsx";
 
 function BlogDetailsPage() {
     const { id } = useParams();
+    const [liked, setLiked] = useState(false);
 
     const blog = mockBlogs.find(
         (blog) => blog.id === Number(id),
@@ -65,6 +68,13 @@ function BlogDetailsPage() {
             </Container>
         );
     }
+    const displayLikeCount =
+        (blog?.like_count ?? 0) +
+        (liked ? 1 : 0);
+
+    const handleLike = () => {
+        setLiked((previous) => !previous);
+    };
 
     const {
         title,
@@ -74,8 +84,6 @@ function BlogDetailsPage() {
         created_at,
         media_url,
         media_type,
-        like_count,
-        comment_count,
     } = blog;
 
     const formattedDate = new Date(
@@ -198,43 +206,26 @@ function BlogDetailsPage() {
                         </Box>
                     </Stack>
 
-                    <Stack
-                        direction="row"
-                        spacing={2}
-                        color="text.secondary"
+                    <Button
+                        type="button"
+                        onClick={handleLike}
+                        startIcon={
+                            liked ? (
+                                <FavoriteIcon />
+                            ) : (
+                                <FavoriteBorderIcon />
+                            )
+                        }
+                        color={liked ? "error" : "inherit"}
+                        sx={{
+                            minWidth: 0,
+                            color: liked
+                                ? "error.main"
+                                : "text.secondary",
+                        }}
                     >
-                        <Stack
-                            direction="row"
-                            spacing={0.5}
-                            alignItems="center"
-                        >
-                            <FavoriteBorderIcon
-                                sx={{
-                                    fontSize: 20,
-                                }}
-                            />
-
-                            <Typography variant="body2">
-                                {like_count ?? 0}
-                            </Typography>
-                        </Stack>
-
-                        <Stack
-                            direction="row"
-                            spacing={0.5}
-                            alignItems="center"
-                        >
-                            <ChatBubbleOutlineIcon
-                                sx={{
-                                    fontSize: 20,
-                                }}
-                            />
-
-                            <Typography variant="body2">
-                                {comment_count ?? 0}
-                            </Typography>
-                        </Stack>
-                    </Stack>
+                        {displayLikeCount}
+                    </Button>
                 </Stack>
 
                 <Divider
@@ -296,6 +287,8 @@ function BlogDetailsPage() {
                 >
                     {content}
                 </Typography>
+
+                <CommentsSection />
             </Container>
         </Box>
     );

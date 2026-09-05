@@ -6,7 +6,7 @@ import {
   Box,
   Button,
   Container,
-  Paper,
+  Paper, 
   Typography,
 } from "@mui/material";
 
@@ -18,7 +18,7 @@ const features = [
     description:
       "Share tutorials, experiences, ideas, and stories with readers through a simple publishing experience.",
     icon: <EditNoteOutlinedIcon />,
-  },
+  },         
   {
     title: "Discover Ideas",
     description:

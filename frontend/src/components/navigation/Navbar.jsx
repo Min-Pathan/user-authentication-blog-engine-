@@ -37,6 +37,10 @@ const navItems = [
     label: "Contact",
     path: "/contact",
   },
+  {
+    label: "Dashboard", 
+    path: "/dashboard" 
+  }
 ];
 
 function Navbar() {

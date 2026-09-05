@@ -20,6 +20,7 @@ const exploreLinks = [
   { label: "Blogs", path: "/blogs" },
   { label: "About", path: "/about" },
   { label: "Contact", path: "/contact" },
+  { label: 'Dashboard', path:'/dashboard'}
 ];
 
 const accountLinks = [
