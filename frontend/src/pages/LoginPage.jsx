@@ -15,14 +15,33 @@ import {
   Typography,
 } from "@mui/material";
 
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema } from "../features/auth/vaildation/loginSchema";
+import { loginUser } from "../services/authService";
+import { useToast } from "../context/ToastContext";
+
+import {
+  useDispatch,
+} from "react-redux";
+
+import {
+  setCredentials,
+} from "../features/auth/authSlice.js";
+
+import {
+  saveAuthData,
+} from "../features/auth/authStorage.js";
 
 
 function LoginPage() {
+
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+  const dispatch = useDispatch();
+
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -42,7 +61,32 @@ function LoginPage() {
   });
 
   const onSubmit = async (data) => {
-    console.log("Login form data:", data);
+    try {
+      const response = await loginUser(data);
+      const {
+        user,
+        token,
+      } = response;
+      saveAuthData({ user, token })
+      dispatch(setCredentials({ user, token }))
+      showToast(
+        response.message ||
+        "Login successful",
+        "success",
+      );
+
+       setTimeout(() => {
+      navigate("/dashboard");
+    }, 1000);
+    }
+    catch (error) {
+      showToast(
+        error.response?.data?.message ||
+        "Login failed. Please try again.",
+        "error",
+      );
+
+    }
   };
 
   return (

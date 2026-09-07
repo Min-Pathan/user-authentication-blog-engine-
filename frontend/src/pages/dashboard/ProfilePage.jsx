@@ -34,10 +34,6 @@ function ProfilePage() {
 
   return (
     <Box
-      sx={{
-        maxWidth: 800,
-        mx: "auto",
-      }}
     >
       <Box sx={{ mb: 4 }}>
         <Typography

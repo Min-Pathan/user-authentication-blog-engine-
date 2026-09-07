@@ -66,7 +66,7 @@ function Navbar() {
           borderColor: "divider",
         }}
       >
-        <Container maxWidth="lg">
+        <Container maxWidth="xl">
           <Toolbar
             disableGutters
             sx={{

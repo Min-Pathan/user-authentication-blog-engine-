@@ -16,6 +16,10 @@ import { Link } from "react-router";
 
 import mockBlogs from "../../mocks/blogs.js";
 
+import {
+  useSelector,
+} from "react-redux";
+
 const stats = [
   {
     label: "Total Blogs",
@@ -40,6 +44,14 @@ const stats = [
 ];
 
 function DashboardPage() {
+  const auth = useSelector(
+  (state) => state.auth,
+);
+
+console.log(
+  "Redux auth:",
+  auth,
+);
   const recentBlogs = mockBlogs.slice(0, 3);
 
   return (

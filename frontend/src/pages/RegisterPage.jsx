@@ -1,8 +1,9 @@
 import { useState } from "react";
-
-
+import { Link, useNavigate } from "react-router";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+
+import { registerUser } from "../services/authService"
 
 import {
   Box,
@@ -16,14 +17,15 @@ import {
   Typography,
 } from "@mui/material";
 
-import { Link } from "react-router";
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema } from "../features/auth/vaildation/registerSchema";
+import { useToast } from "../context/ToastContext";
 
 
 function RegisterPage() {
+  const navigate = useNavigate();
+  const {showToast} = useToast();
   const [showPassword, setShowPassword] =
     useState(false);
 
@@ -43,7 +45,7 @@ function RegisterPage() {
     resolver: zodResolver(registerSchema),
 
     defaultValues: {
-      name: "",
+      username: "",
       email: "",
       phone: "",
       password: "",
@@ -52,16 +54,37 @@ function RegisterPage() {
   });
 
   const onSubmit = async (data) => {
-    const {
-      // confirmPassword,
-      ...registerData
-    } = data;
+  try {
+    const registerData = {
+      username: data.username,
+      email: data.email,
+      phone: data.phone,
+      password: data.password,
+    };
 
-    console.log(
-      "Registration data:",
+    await registerUser(
       registerData,
     );
-  };
+
+    showToast(
+      "Registration successful. Please login.",
+      "success",
+    );
+
+    navigate("/login");
+  } catch (error) {
+    console.error(
+      "Registration failed:",
+      error,
+    );
+
+    showToast(
+      error.response?.data?.message ||
+        "Registration failed. Please try again.",
+      "error",
+    );
+  }
+};
 
   return (
     <Box
@@ -122,16 +145,16 @@ function RegisterPage() {
             onSubmit={handleSubmit(onSubmit)}
           >
             <Stack spacing={2.5}>
-              {/* Name */}
+              {/* username */}
               <TextField
-                label="Name"
+                label="Username"
                 fullWidth
-                autoComplete="name"
-                error={Boolean(errors.name)}
+                autoComplete="username"
+                error={Boolean(errors.username)}
                 helperText={
-                  errors.name?.message
+                  errors.username?.message
                 }
-                {...register("name")}
+                {...register("username")}
               />
 
               {/* Email */}
@@ -153,13 +176,13 @@ function RegisterPage() {
                 type="tel"
                 fullWidth
                 autoComplete="tel"
-                placeholder=""Phone number
+                placeholder="" Phone number
                 error={Boolean(errors.phone)}
                 helperText={
                   errors.phone?.message
                 }
                 {...register("phone")}
-         
+
               />
 
               {/* Password */}

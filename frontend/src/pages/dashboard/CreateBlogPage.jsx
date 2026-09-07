@@ -1,12 +1,10 @@
-import ArrowBackIcon from "@mui/icons-material/ArrowBack"
+
 import {
   Box,
-  Button,
   Typography,
 } from "@mui/material";
 
 import BlogForm from "../../components/blogs/BlogForm.jsx";
-import { Link } from "react-router";
 
 function CreateBlogPage() {
   const handleCreateBlog = async (
@@ -27,21 +25,10 @@ function CreateBlogPage() {
 
   return (
     <Box
-      sx={{
-        maxWidth: 900,
-        mx: "auto",
-      }}
+
     >
       <Box sx={{ mb: 4 }}>
-                <Button
-        component={Link}
-        to="/dashboard/my-blogs"
-        startIcon={<ArrowBackIcon/>}
-        sx={{
-          mb:3, px:2
-        }}>
-          Back
-        </Button>
+
         <Typography
           component="h1"
           variant="h4"

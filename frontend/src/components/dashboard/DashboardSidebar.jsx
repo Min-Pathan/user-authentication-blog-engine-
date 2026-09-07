@@ -9,7 +9,6 @@ import {
   Button,
   Divider,
   Stack,
-  Typography,
 } from "@mui/material";
 
 import { NavLink } from "react-router";
@@ -50,47 +49,7 @@ function DashboardSidebar({ onNavigate }) {
         borderColor: "divider",
       }}
     >
-      {/* Logo */}
-      <Box
-        sx={{
-          px: 3,
-          py: 3,
-        }}
-      >
-        <Typography
-          component={NavLink}
-          to="/"
-          onClick={onNavigate}
-          sx={{
-            textDecoration: "none",
-            color: "text.primary",
-            fontSize: "1.6rem",
-            fontWeight: 800,
-            letterSpacing: "-0.05em",
-          }}
-        >
-          Blogger
-          <Box
-            component="span"
-            sx={{ color: "primary.main" }}
-          >
-            .
-          </Box>
-        </Typography>
-
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          sx={{
-            display: "block",
-            mt: 0.5,
-          }}
-        >
-          Writer dashboard
-        </Typography>
-      </Box>
-
-      <Divider />
+     
 
       {/* Navigation */}
       <Stack

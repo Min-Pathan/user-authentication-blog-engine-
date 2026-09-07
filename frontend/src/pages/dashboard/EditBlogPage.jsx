@@ -92,10 +92,7 @@ function EditBlogPage() {
 
   return (
     <Box
-      sx={{
-        maxWidth: 900,
-        mx: "auto",
-      }}
+     
     >
       <Box sx={{ mb: 4 }}>
         <Button
