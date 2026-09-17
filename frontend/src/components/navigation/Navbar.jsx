@@ -1,4 +1,4 @@
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 import { useState } from "react";
 
 import MenuIcon from "@mui/icons-material/Menu";
@@ -6,6 +6,7 @@ import CloseIcon from "@mui/icons-material/Close";
 
 import {
   AppBar,
+  Avatar,
   Box,
   Button,
   Container,
@@ -18,7 +19,12 @@ import {
   Stack,
   Toolbar,
   Typography,
+  MenuItem,
+  Menu
 } from "@mui/material";
+import { useDispatch, useSelector } from "react-redux";
+import { clearAuth } from "../../features/auth/authStorage";
+import { clearCredentials } from "../../features/auth/authSlice";
 
 const navItems = [
   {
@@ -37,14 +43,24 @@ const navItems = [
     label: "Contact",
     path: "/contact",
   },
-  {
-    label: "Dashboard", 
-    path: "/dashboard" 
-  }
+
 ];
 
 function Navbar() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useSelector((state) => state.auth)
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+
+
+  const handleLogout = () => {
+    clearAuth();
+    dispatch(clearCredentials())
+    setDrawerOpen(false);
+
+    navigate("/login")
+  }
 
   const handleOpenDrawer = () => {
     setDrawerOpen(true);
@@ -53,6 +69,14 @@ function Navbar() {
   const handleCloseDrawer = () => {
     setDrawerOpen(false);
   };
+
+  const handleProfileOpen = () => {
+    setProfileOpen(true)
+  };
+
+  const handleProfileClose = () => {
+    setProfileOpen(false)
+  }
 
   return (
     <>
@@ -137,36 +161,133 @@ function Navbar() {
             <Box sx={{ flexGrow: 1 }} />
 
             {/* Desktop Auth Buttons */}
-            <Stack
-              direction="row"
-              spacing={1.5}
-              sx={{
-                display: {
-                  xs: "none",
-                  md: "flex",
-                },
-              }}
-            >
-              <Button
-                variant="text"
-                component={NavLink}
-                to="/login"
+            {isAuthenticated ? (
+              <Stack
+                direction="row"
+                spacing={1.5}
+                alignItems="center"
+              >
+
+                <Button component={NavLink}
+                  to="/dashboard" color="inherit"
+                  sx={{
+                    color: "text.secondary",
+                    fontWeight: 600,
+
+                    "&.active": {
+                      color: "primary.main",
+                    },
+
+                    "&:hover": {
+                      color: "primary.main",
+                      bgcolor: "transparent",
+                    },
+                  }}>
+                  Dashboard
+                </Button>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                >
+                  <Avatar
+                    sx={{
+                      width: 34,
+                      height: 34,
+                      bgcolor: "primary.main",
+                      fontSize: "0.9rem",
+                    }}
+                    onClick={handleProfileOpen}
+                  >
+                    {user?.username
+                      ?.charAt(0)
+                      .toUpperCase() || "U"}
+                  </Avatar>
+
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 600,
+                    }}
+                  >
+                    {user?.username}
+                  </Typography>
+                </Stack>
+
+                {profileOpen && (
+                  <Menu
+                    anchorEl={profileOpen}
+                    open={Boolean(profileOpen)}
+                    onClose={handleProfileClose}
+                    anchorOrigin={{
+                      vertical: 'bottom',
+                      horizontal: 'center'
+                    }}
+                    transformOrigin={{
+                      vertical: 'top',
+                      horizontal: "center"
+                    }}
+                    sx={{
+                      pointerEvents: 'none',
+                      '& .MuiMenu-paper': {
+                        pointerEvents: 'auto',
+                      },
+                    }}
+                  >
+                    <MenuItem>
+                      Profile
+                    </MenuItem>
+                    <MenuItem>
+                      <Button
+                        color="inherit"
+                        onClick={handleLogout}
+                        sx={{
+                          color: "text.secondary",
+
+                          "&:hover": {
+                            color: "error.main",
+                            bgcolor: "transparent",
+                          },
+                        }}
+                      >
+                        Logout
+                      </Button>
+                    </MenuItem>
+                  </Menu>
+                )}
+              </Stack>
+
+            ) :
+              (<Stack
+                direction="row"
+                spacing={1.5}
                 sx={{
-                  color: "text.primary",
+                  display: {
+                    xs: "none",
+                    md: "flex",
+                  },
                 }}
               >
-                Login
-              </Button>
+                <Button
+                  variant="text"
+                  component={NavLink}
+                  to="/login"
+                  sx={{
+                    color: "text.primary",
+                  }}
+                >
+                  Login
+                </Button>
 
-              <Button
-                variant="contained"
-                disableElevation
-                component={NavLink}
-                to="/register"
-              >
-                Register
-              </Button>
-            </Stack>
+                <Button
+                  variant="contained"
+                  disableElevation
+                  component={NavLink}
+                  to="/register"
+                >
+                  Register
+                </Button>
+              </Stack>)}
 
             {/* Mobile Menu Button */}
             <IconButton
@@ -280,35 +401,61 @@ function Navbar() {
             ))}
           </List>
 
-          <Divider
-            sx={{
-              my: 2,
-            }}
-          />
+          <Divider sx={{ my: 2 }} />
 
-          {/* Mobile Auth Buttons */}
-          <Stack spacing={1.5}>
-            <Button
-              component={NavLink}
-              to="/login"
-              onClick={handleCloseDrawer}
-              variant="outlined"
-              fullWidth
-            >
-              Login
-            </Button>
+          {isAuthenticated ? (
+            <Stack spacing={1}>
+              <Button
+                component={NavLink}
+                to="/dashboard"
+                onClick={() =>
+                  setDrawerOpen(false)
+                }
+                fullWidth
+                sx={{
+                  justifyContent: "flex-start",
+                }}
+              >
+                Dashboard
+              </Button>
 
-            <Button
-              component={NavLink}
-              to="/register"
-              onClick={handleCloseDrawer}
-              variant="contained"
-              fullWidth
-              disableElevation
-            >
-              Register
-            </Button>
-          </Stack>
+              <Button
+                color="error"
+                onClick={handleLogout}
+                fullWidth
+                sx={{
+                  justifyContent: "flex-start",
+                }}
+              >
+                Logout
+              </Button>
+            </Stack>
+          ) : (
+            <Stack spacing={1}>
+              <Button
+                component={NavLink}
+                to="/login"
+                onClick={() =>
+                  setDrawerOpen(false)
+                }
+                fullWidth
+              >
+                Login
+              </Button>
+
+              <Button
+                component={NavLink}
+                to="/register"
+                onClick={() =>
+                  setDrawerOpen(false)
+                }
+                variant="contained"
+                fullWidth
+              >
+                Register
+              </Button>
+            </Stack>
+          )}
         </Box>
       </Drawer>
     </>

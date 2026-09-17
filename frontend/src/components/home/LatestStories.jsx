@@ -40,7 +40,7 @@ const LatestStories = ({ blogs }) => {
                     <Button
                         variant="text"
                         endIcon={<ArrowForwardIcon />}
-                        sx={{ px: 0 }}>
+                        sx={{ px: 2 }}>
                         View all posts
                     </Button>
                 </Stack>

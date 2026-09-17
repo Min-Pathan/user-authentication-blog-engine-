@@ -1,87 +1,184 @@
-import { Box, Container, Pagination, Stack, Typography } from '@mui/material'
-import { useState } from 'react'
-import mockBlogs from '../mocks/blogs';
-import BlogFilters from '../components/blogs/BlogFilters';
-import BlogGrid from '../components/blogs/BlogsGrid';
+import {
+  useState,
+} from "react";
 
-const BlogsPage = () => {
-    const [search, seatSearch] = useState("");
-    const [selectedCategory, setSelectedCategory] = useState("All");
-    const filterBlogs = mockBlogs.filter((blog) => {
-        const searchValue = search.trim().toLowerCase();
-        const matchedSearch = blog.title.toLowerCase().includes(searchValue) || 
-            blog.content.toLowerCase().includes(searchValue) ||
-            blog.username.toLowerCase().includes(searchValue);
+import {
+  Alert,
+  Box,
+  Container,
+  Typography,
+} from "@mui/material";
 
-        const matchedCategory = selectedCategory === 'All' || blog.category === selectedCategory
+import useBlogs from "../features/blogs/queries/useBlogs.js";
+import BlogGrid from "../components/blogs/BlogsGrid.jsx";
+import BlogFilters from "../components/blogs/BlogFilters.jsx";
+import PaginationCustom from "../components/common/PaginationCustom.jsx";
+import CardSkeleton from "../components/common/CardSkeleton.jsx";
 
-        return matchedCategory && matchedSearch;
-    })
+function BlogsPage() {
+  const [page, setPage] = useState(1);
+
+  const [itemPerPage, setItemPerPage] = useState(6);
+
+  const [searchInput, setSearchInput] = useState("");
+
+  const [keyword, setKeyword] = useState("");
+
+  const {
+    data,
+    isFetching,
+    isError,
+    error,
+  } = useBlogs({
+    page,
+    limit: itemPerPage,
+    keyword,
+  });
+
+  const blogs = data?.blogs ?? [];
+
+  const totalBlogs = data?.totalBlogs ?? 0;
+
+  const handleSearch = () => {
+    setPage(1);
+
+    setKeyword(
+      searchInput.trim(),
+    );
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput("");
+    setKeyword("");
+    setPage(1);
+  };
+
+  // if (isLoading) {
+  //   return (
+
+  //   );
+  // }
+
+  if (isError) {
     return (
-        <Box component="section"
+      <Container
+        maxWidth="lg"
+        sx={{
+          py: 8,
+        }}
+      >
+        <Alert severity="error">
+          {error?.response?.data
+            ?.message ||
+            "Failed to load blogs."}
+        </Alert>
+      </Container>
+    );
+  }
+
+  return (
+    <Container
+      maxWidth="lg"
+      sx={{
+        py: {
+          xs: 4,
+          md: 7,
+        },
+      }}
+    >
+      <Box
+        sx={{
+          mb: 4,
+        }}
+      >
+        <Typography
+          variant="h3"
+          component="h1"
+          sx={{
+            fontWeight: 700,
+            mb: 1,
+          }}
+        >
+          Explore Blogs
+        </Typography>
+
+        <Typography
+          color="text.secondary"
+        >
+          Discover stories,
+          ideas and articles
+          from our community.
+        </Typography>
+      </Box>
+
+      <BlogFilters
+        searchInput={
+          searchInput
+        }
+        setSearchInput={
+          setSearchInput
+        }
+        onSearch={
+          handleSearch
+        }
+        onClear={
+          handleClearSearch
+        }
+      />
+
+         {isFetching ? (
+        <CardSkeleton
+          count={3}
+          imageHeight={220}
+        />
+      ) : blogs.length > 0 ? (
+        <>
+          <BlogGrid
+            blogs={blogs}
+          />
+
+          <PaginationCustom
+            page={page}
+            rowCount={
+              totalBlogs
+            }
+            itemPerPage={
+              itemPerPage
+            }
+            setCurrentPage={
+              setPage
+            }
+            setItemPerPage={
+              setItemPerPage
+            }
+          />
+        </>
+      ) : (
+        <Box
+          sx={{
+            py: 10,
+            textAlign: "center",
+          }}
+        >
+          <Typography
+            variant="h6"
             sx={{
-                py: {
-                    xs: 5, md: 8
-                }
-            }}>
-            <Container maxWidth="lg"    >
-                <Box sx={{ mb: 4 }}>
-                    <Typography component="h1"
-                        sx={{
-                            fontSize: {
-                                xs: '2.4em', md: '3.5em'
-                            },
-                            fontWeight: 800, letterSpacing: '-0.04em'
-                        }}>
-                        Explore Stories
-                    </Typography>
-                    <Typography
-                        color="text.secondary"
-                        sx={{
-                            mt: 1.5,
-                            maxWidth: 650,
-                            lineHeight: 1.8,
-                        }}
-                    >
-                        Discover articles, tutorials, experiences,
-                        and ideas shared by our community.
-                    </Typography>
-                </Box>
-                <BlogFilters search={search} onSearchChange={seatSearch} selectedCategory={selectedCategory} onCategorychange={setSelectedCategory} />
-                {/* Result count */}
-                <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{
-                        mt: 4,
-                        mb: 2,
-                    }}
-                >
-                    {filterBlogs.length}{" "}
-                    {filterBlogs.length === 1
-                        ? "story"
-                        : "stories"}{" "}
-                    found
-                </Typography>
+              mb: 1,
+            }}
+          >
+            No blogs found
+          </Typography>
 
-                {/* {blogs} */}
-                <BlogGrid blogs={filterBlogs} />
-
-                {/* pagination  */}
-                {filterBlogs.length > 0 && (
-                    <Stack alignItems="center"
-                        sx={{
-                            mt: {
-                                xs: 5,
-                                md: 7,
-                            },
-                        }}>
-                        <Pagination count={3} page={1} color='primary' shape='rounded' />
-                    </Stack>
-                )}
-            </Container>
+          <Typography
+            color="text.secondary"
+          >
+            Try another search
+            keyword.
+          </Typography>
         </Box>
-    )
+      )}
+    </Container>
+  );
 }
 
-export default BlogsPage
+export default BlogsPage;

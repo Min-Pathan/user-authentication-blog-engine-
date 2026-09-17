@@ -13,7 +13,6 @@ import { Outlet } from "react-router";
 
 import DashboardSidebar from "../components/dashboard/DashboardSidebar.jsx";
 import Navbar from "../components/navigation/Navbar.jsx";
-
 const SIDEBAR_WIDTH = 260;
 
 function DashboardLayout() {

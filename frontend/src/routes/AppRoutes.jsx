@@ -17,6 +17,7 @@ import MyBlogsPage from "../pages/dashboard/MyBlogsPage.jsx";
 import CreateBlogPage from "../pages/dashboard/CreateBlogPage.jsx";
 import EditBlogPage from "../pages/dashboard/EditBlogPage.jsx";
 import ProfilePage from '../pages/dashboard/ProfilePage.jsx'
+import ProtectedRoute from './ProtectedRoute.jsx'
 
 const AppRoutes = () => {
     return (
@@ -59,6 +60,7 @@ const AppRoutes = () => {
                     element={<NotFoundPage />}
                 />
             </Route>
+            <Route element={<ProtectedRoute/>}>
             <Route
                 path="/dashboard"
                 element={<DashboardLayout />}
@@ -85,6 +87,7 @@ const AppRoutes = () => {
                     path="profile"
                     element={<ProfilePage />}
                 />
+            </Route>
             </Route>
         </Routes>
     )

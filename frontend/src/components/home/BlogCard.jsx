@@ -18,7 +18,6 @@ function BlogCard({ blog }) {
     id,
     title,
     content,
-    category,
     username,
     created_at,
     media_url,
@@ -131,8 +130,13 @@ function BlogCard({ blog }) {
         }}
       >
         <Chip
-          label={category}
+          label={
+            blog.category ||
+            "Uncategorized"
+          }
           size="small"
+          color="primary"
+          variant="outlined"
           sx={{
             alignSelf: "flex-start",
             mb: 2,
@@ -142,30 +146,30 @@ function BlogCard({ blog }) {
           }}
         />
 
-       <Typography
-  component={Link}
-  to={`/blogs/${id}`}
-  variant="h6"
-  sx={{
-    color: "text.primary",
-    textDecoration: "none",
-    fontWeight: 700,
-    lineHeight: 1.35,
+        <Typography
+          component={Link}
+          to={`/blogs/${id}`}
+          variant="h6"
+          sx={{
+            color: "text.primary",
+            textDecoration: "none",
+            fontWeight: 700,
+            lineHeight: 1.35,
 
-    display: "-webkit-box",
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: "vertical",
-    overflow: "hidden",
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
 
-    transition: "color 0.2s ease",
+            transition: "color 0.2s ease",
 
-    "&:hover": {
-      color: "primary.main",
-    },
-  }}
->
-  {title}
-</Typography>
+            "&:hover": {
+              color: "primary.main",
+            },
+          }}
+        >
+          {title}
+        </Typography>
         <Typography
           color="text.secondary"
           sx={{

@@ -11,7 +11,22 @@ import {
   Stack,
 } from "@mui/material";
 
-import { NavLink } from "react-router";
+import {
+  useDispatch,
+} from "react-redux";
+
+import {
+  NavLink,
+  useNavigate,
+} from "react-router";
+
+import {
+  clearCredentials,
+} from "../../features/auth/authSlice.js";
+
+import {
+  clearAuth,
+} from "../../features/auth/authStorage.js";
 
 const menuItems = [
   {
@@ -37,6 +52,20 @@ const menuItems = [
 ];
 
 function DashboardSidebar({ onNavigate }) {
+  const dispatch = useDispatch();
+const navigate = useNavigate();
+
+const handleLogout = () => {
+  clearAuth();
+
+  dispatch(
+    clearCredentials(),
+  );
+
+  onNavigate?.();
+
+  navigate("/login");
+};
   return (
     <Box
       sx={{
@@ -49,8 +78,6 @@ function DashboardSidebar({ onNavigate }) {
         borderColor: "divider",
       }}
     >
-     
-
       {/* Navigation */}
       <Stack
         spacing={0.75}
@@ -93,18 +120,19 @@ function DashboardSidebar({ onNavigate }) {
 
       {/* Logout - UI only for now */}
       <Box sx={{ p: 2 }}>
-        <Button
-          fullWidth
-          startIcon={<LogoutOutlinedIcon />}
-          sx={{
-            justifyContent: "flex-start",
-            px: 2,
-            py: 1.2,
-            color: "error.main",
-          }}
-        >
-          Logout
-        </Button>
+       <Button
+  fullWidth
+  startIcon={<LogoutOutlinedIcon />}
+  onClick={handleLogout}
+  sx={{
+    justifyContent: "flex-start",
+    px: 2,
+    py: 1.2,
+    color: "error.main",
+  }}
+>
+  Logout
+</Button>
       </Box>
     </Box>
   );
