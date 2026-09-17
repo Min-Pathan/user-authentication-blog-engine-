@@ -16,11 +16,10 @@ export const createBlogSchema = z.object({
     .trim()
     .min(5, "Content must be at least 5 characters"),
 
-  category: z
-    .string()
-    .trim()
-    .min(1, "Category is required")
-    .optional(),
+  category_id: z.coerce
+    .number()
+    .int()
+    .positive("Please select a valid category"),
 });
 
 export const updateBlogSchema = z

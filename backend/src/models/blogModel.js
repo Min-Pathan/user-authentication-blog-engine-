@@ -44,21 +44,34 @@ const updateBlog = async (
   return result.rows[0];
 };
 
-const getAllBlogs = async (limit, offset, keyword) => {
-  let whereClause = "";
-  const values = [];
+const getAllBlogs = async (limit, offset, keyword, categoryId) => {
+  const conditions = [];
+  const values=[]
   let valueIndex = 1;
 
   if (keyword) {
-    whereClause = `
-      WHERE blogs.title ILIKE $${valueIndex}
-      OR blogs.content ILIKE $${valueIndex}
-      OR users.username ILIKE $${valueIndex}
-    `;
+    conditions.push(`
+      (
+        blogs.title ILIKE $${valueIndex}
+        OR blogs.content ILIKE $${valueIndex}
+        OR users.username ILIKE $${valueIndex}
+      )
+    `);
 
     values.push(`%${keyword}%`);
     valueIndex++;
   }
+
+  if (categoryId) {
+    conditions.push(
+      `blogs.category_id = $${valueIndex}`,
+    );
+
+    values.push(categoryId);
+    valueIndex++;
+  }
+
+  const whereClause = conditions.length > 0 ? `Where ${conditions.join(" AND")}` : ''
 
   const query = `
   SELECT
@@ -72,17 +85,21 @@ const getAllBlogs = async (limit, offset, keyword) => {
     blogs.category_id,
     blogs.created_at,
     users.username,
+     categories.name AS category,
     COUNT(DISTINCT likes.id) AS like_count,
     COUNT(DISTINCT comments.id) AS comment_count
   FROM blogs
   JOIN users
     ON blogs.user_id = users.id
+  LEFT JOIN categories
+    ON blogs.category_id = categories.id
   LEFT JOIN likes
     ON blogs.id = likes.blog_id
   LEFT JOIN comments
     ON blogs.id = comments.blog_id
   ${whereClause}
-  GROUP BY blogs.id, users.username
+  GROUP BY blogs.id, users.username,  categories.id,
+      categories.name
   ORDER BY blogs.created_at DESC
   LIMIT $${valueIndex}
   OFFSET $${valueIndex + 1}
@@ -99,28 +116,61 @@ const getAllBlogs = async (limit, offset, keyword) => {
   }));
 };
 
-const getBlogsCount = async (keyword) => {
-  let whereClause = "";
+const getBlogsCount = async (
+  keyword,
+  categoryId,
+) => {
+  const conditions = [];
   const values = [];
 
+  let valueIndex = 1;
+
   if (keyword) {
-    whereClause = `
-      WHERE title ILIKE $1
-      OR content ILIKE $1
-    `;
+    conditions.push(`
+      (
+        blogs.title ILIKE $${valueIndex}
+        OR blogs.content ILIKE $${valueIndex}
+        OR users.username ILIKE $${valueIndex}
+      )
+    `);
 
     values.push(`%${keyword}%`);
+    valueIndex++;
   }
+
+  if (categoryId) {
+    conditions.push(
+      `blogs.category_id = $${valueIndex}`,
+    );
+
+    values.push(categoryId);
+  }
+
+  const whereClause =
+    conditions.length > 0
+      ? `WHERE ${conditions.join(" AND ")}`
+      : "";
 
   const query = `
     SELECT COUNT(*)
+
     FROM blogs
+
+    JOIN users
+      ON blogs.user_id = users.id
+
     ${whereClause}
   `;
 
-  const result = await pool.query(query, values);
+  const result =
+    await pool.query(
+      query,
+      values,
+    );
 
-  return parseInt(result.rows[0].count);
+  return Number(
+    result.rows[0].count,
+  );
 };
 
 const getMyBlogs = async (userId) => {

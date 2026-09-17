@@ -46,6 +46,16 @@ const createBlogsController = async (req, res, next) => {
       category_id
     );
 
+console.log(
+  "req.body:",
+  req.body,
+);
+
+console.log(
+  "validated:",
+  req.validatedData,
+);
+
     return res.status(201).json({
       success: true,
       message: "Blog created successfully",
@@ -98,15 +108,15 @@ const updateBlogsController = async (req, res, next) => {
     const oldPublicId = existingBlog.media_public_id;
     const oldMediaType = existingBlog.media_type;
 
-const removeMedia = data.remove_media === true;
+    const removeMedia = data.remove_media === true;
 
-      if (req.file && removeMedia) {
+    if (req.file && removeMedia) {
       throw new AppError(
         "Choose either a new media file or remove the existing media",
         400
       );
     }
-//case 1 : replace existing file
+    //case 1 : replace existing file
     if (req.file) {
       const uploadedMedia = await uploadToCloudinary(
         req.file.path
@@ -125,14 +135,12 @@ const removeMedia = data.remove_media === true;
     }
 
     //case 2: remove exiting file
-    if(removeMedia){
-      mediaUrl=null
-      mediaType=null;
-      mediaPublicId=null
+    if (removeMedia) {
+      mediaUrl = null
+      mediaType = null;
+      mediaPublicId = null
     }
 
-    console.log("req.body:", req.body);
-console.log("req.validatedData:", req.validatedData);
     const updatedBlog = await updateBlog(
       id,
       title,
@@ -144,7 +152,7 @@ console.log("req.validatedData:", req.validatedData);
     );
 
     console.log("validated data:", data);
-console.log("removeMedia:", removeMedia, typeof removeMedia);
+    console.log("removeMedia:", removeMedia, typeof removeMedia);
 
     // Delete old Cloudinary asset only after DB update succeeds
     if ((req.file || removeMedia) && oldPublicId) {
@@ -235,23 +243,25 @@ const deleteBlogController = async (req, res, next) => {
 };
 
 const getAllBlogsController = async (req, res) => {
-
   try {
 
-    let { page, limit, keyword } = req.query;
+    let { page, limit, keyword, categoryId } = req.query;
 
-    page = parseInt(page) || 1;
-    limit = parseInt(limit) || 2;
+    page = parseInt(page, 10) || 1;
+    limit = parseInt(limit, 10) || 6;
+     keyword = keyword?.trim() || "";
+     categoryId = categoryId ? parseInt(categoryId, 10) : null
 
     const offset = (page - 1) * limit;
 
     const blogs = await getAllBlogs(
       limit,
       offset,
-      keyword
+      keyword,
+      categoryId
     );
 
-    const totalBlogs = await getBlogsCount(keyword);
+    const totalBlogs = await getBlogsCount(keyword, categoryId);
 
     res.status(200).json({
       success: true,

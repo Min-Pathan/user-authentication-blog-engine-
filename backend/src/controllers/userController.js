@@ -12,39 +12,39 @@ import AppError from "../Errors/AppError.js";
 
 const registerUser = async (req, res, next) => {
   try {
-    const { username, email, password } = req.validatedData;
-    if (!username || !email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Username, email and password are required",
-      });
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({
-        success: false,
-        message: "Please enter a valid email",
-      });
-    }
-    if (password.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: "Password must be at least 6 characters",
-      });
-    }
-    const existingUser = await findUserByEmail(email);
+    const {
+      username,
+      email,
+      password,
+      phone,
+    } = req.validatedData;
+
+    const existingUser =
+      await findUserByEmail(email);
 
     if (existingUser) {
-      throw new AppError("Email already exists", 409);
+      throw new AppError(
+        "Email already exists",
+        409,
+      );
     }
 
-    // hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await createUser(username, email, hashedPassword, "user");
+    const hashedPassword =
+      await bcrypt.hash(password, 10);
+
+    const newUser = await createUser(
+      username,
+      email,
+      hashedPassword,
+      phone,
+      "user",
+    );
+
     const safeUser = {
       id: newUser.id,
       username: newUser.username,
       email: newUser.email,
+      phone: newUser.phone,
     };
 
     res.status(201).json({
@@ -52,13 +52,13 @@ const registerUser = async (req, res, next) => {
       user: safeUser,
     });
   } catch (error) {
-    return next(error);
+    next(error);
   }
 };
 
 const loginUser = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.validatedData;
     const user = await findUserByEmail(email);
     if (!user) {
       throw new AppError("Invalid credentials", 401);
@@ -82,6 +82,7 @@ const loginUser = async (req, res, next) => {
       username: user.username,
       email: user.email,
       role: user.role,
+      phone: user.phone
     };
     res.status(200).json({
       success: true,
@@ -115,7 +116,7 @@ const getAllUsers = async (req, res) => {
     page = parseInt(page) || 1;
     const offset = (page - 1) * limit;
 
-    const allowedFields = ["id", "username", "email", "role"];
+    const allowedFields = ["id", "username", "email", "phone", "role"];
     const finalSortBy = allowedFields.includes(sortBy) ? sortBy : "id";
     const sortOrder = orderBy === "desc" ? "DESC" : "ASC";
 
@@ -136,7 +137,7 @@ const getAllUsers = async (req, res) => {
     }
 
     const query = `
-      SELECT id, username, email, role FROM users
+      SELECT id, username, email, phone, role FROM users
       ${whereClause}
       ORDER BY ${finalSortBy} ${sortOrder}
       LIMIT $${valueIndex} OFFSET $${valueIndex + 1}
@@ -175,6 +176,7 @@ const getUserById = async (req, res) => {
       id: user.id,
       username: user.username,
       email: user.email,
+      phone: user.phone,
       role: user.role,
     };
     return res.status(200).json({
@@ -199,7 +201,7 @@ const updateUserController = async (req, res) => {
       });
     }
 
-    const { username, email } = req.body;
+    const { username, email, phone } = req.body;
 
     // check user exists
     const existingUser = await pool.query(`SELECT * FROM users WHERE id = $1`, [
@@ -243,13 +245,18 @@ const updateUserController = async (req, res) => {
       index++;
     }
 
+    if(phone){
+      fields.push(`phone = $${index}`);
+      values.push(phone);
+      index++
+    }
     values.push(id);
 
     const query = `
       UPDATE users
       SET ${fields.join(", ")}
       WHERE id = $${index}
-      RETURNING id, username, email, role
+      RETURNING id, username, email, phone, role
     `;
 
     const result = await updateUSer(query, values);
