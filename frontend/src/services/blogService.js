@@ -24,3 +24,13 @@ export const getAllBlogs = async ({
 
   return response.data;
 };
+
+export const getBlogById =
+  async (id) => {
+    const response =
+      await axiosInstance.get(
+        `/api/blogs/${id}`,
+      );
+
+    return response.data;
+  };

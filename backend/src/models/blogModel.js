@@ -46,7 +46,7 @@ const updateBlog = async (
 
 const getAllBlogs = async (limit, offset, keyword, categoryId) => {
   const conditions = [];
-  const values=[]
+  const values = []
   let valueIndex = 1;
 
   if (keyword) {
@@ -190,11 +190,54 @@ order by blogs.created_at desc;`;
 };
 
 const getBlogById = async (blogId) => {
-  const query = `select blogs.id, blogs.title, blogs.content, blogs.created_at, blogs.user_id, blogs.category_id,  blogs.media_url, blogs.media_public_id,
-      blogs.media_type,users.username, users.email, count(likes.id) as like_count
-  from blogs join users on blogs.user_id = users.id 
-  left join likes on blogs.id = likes.blog_id where blogs.id = $1 group by blogs.id, users.id` ;
-  const result = await pool.query(query, [blogId]);
+  const query = `
+    SELECT
+      blogs.id,
+      blogs.title,
+      blogs.content,
+      blogs.created_at,
+      blogs.user_id,
+      blogs.category_id,
+      blogs.media_url,
+      blogs.media_public_id,
+      blogs.media_type,
+
+      users.username,
+      users.email,
+
+      categories.name AS category,
+
+      COUNT(DISTINCT likes.id) AS like_count,
+      COUNT(DISTINCT comments.id) AS comment_count
+
+    FROM blogs
+
+    JOIN users
+      ON blogs.user_id = users.id
+
+    LEFT JOIN categories
+      ON blogs.category_id = categories.id
+
+    LEFT JOIN likes
+      ON blogs.id = likes.blog_id
+
+    LEFT JOIN comments
+      ON blogs.id = comments.blog_id
+
+    WHERE blogs.id = $1
+
+    GROUP BY
+      blogs.id,
+      users.id,
+      categories.id,
+      categories.name
+  `;
+
+  const result =
+    await pool.query(
+      query,
+      [blogId],
+    );
 
   if (!result.rows[0]) {
     return null;
@@ -202,7 +245,14 @@ const getBlogById = async (blogId) => {
 
   return {
     ...result.rows[0],
-    like_count: Number(result.rows[0]?.like_count),
+
+    like_count: Number(
+      result.rows[0].like_count,
+    ),
+
+    comment_count: Number(
+      result.rows[0].comment_count,
+    ),
   };
 };
 

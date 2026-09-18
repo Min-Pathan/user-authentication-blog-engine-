@@ -3,6 +3,7 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 
 import {
+    Alert,
     Avatar,
     Box,
     Button,
@@ -14,18 +15,16 @@ import {
 } from "@mui/material";
 
 import { Link, useParams } from "react-router";
-
-import mockBlogs from "../mocks/blogs.js";
 import { useState } from "react";
 import CommentsSection from "../components/comments/CommentsSection.jsx";
+import BlogDetailsSkeleton from "../components/common/BlogDetailsSkeleton.jsx";
+import useBlog from "../features/blogs/queries/useBlog.js";
 
 function BlogDetailsPage() {
     const { id } = useParams();
     const [liked, setLiked] = useState(false);
-
-    const blog = mockBlogs.find(
-        (blog) => blog.id === Number(id),
-    );
+    const { data, isLoading, isFetching, isError, error } = useBlog(id);
+    const blog = data?.blog
 
     if (!blog) {
         return (
@@ -68,9 +67,6 @@ function BlogDetailsPage() {
             </Container>
         );
     }
-    const displayLikeCount =
-        (blog?.like_count ?? 0) +
-        (liked ? 1 : 0);
 
     const handleLike = () => {
         setLiked((previous) => !previous);
@@ -96,6 +92,40 @@ function BlogDetailsPage() {
 
     const authorInitial =
         username?.charAt(0).toUpperCase() || "?";
+
+        if (
+  isLoading ||
+  isFetching
+) {
+  return (
+    <Container
+      maxWidth="md"
+      sx={{
+        py: {
+          xs: 4,
+          md: 7,
+        },
+      }}
+    >
+      <BlogDetailsSkeleton />
+    </Container>
+  );
+}
+
+if (isError) {
+  return (
+    <Container
+      maxWidth="md"
+      sx={{ py: 8 }}
+    >
+      <Alert severity="error">
+        {error?.response
+          ?.data?.message ||
+          "Failed to load blog."}
+      </Alert>
+    </Container>
+  );
+}
 
     return (
         <Box
@@ -224,7 +254,7 @@ function BlogDetailsPage() {
                                 : "text.secondary",
                         }}
                     >
-                        {displayLikeCount}
+                        {blog.like_count}
                     </Button>
                 </Stack>
 

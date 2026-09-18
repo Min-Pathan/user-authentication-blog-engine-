@@ -3,15 +3,30 @@ import {
   Button,
   Chip,
   Container,
+  IconButton,
   InputAdornment,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
 
+import Clear from "@mui/icons-material/Clear";
+
 import SearchIcon from "@mui/icons-material/Search";
 
-const HeroSection = () => {
+const HeroSection = ({
+  searchInput,
+  setSearchInput,
+  onSearch,
+  onClear,
+}) => {
+  const handleSubmit = (
+    event,
+  ) => {
+    event.preventDefault();
+
+    onSearch();
+  };
   return (
     <Box component="section"
       sx={{ bgcolor: 'background.paper', borderBottom: '1px solid', borderColor: 'divider' }}>
@@ -66,6 +81,8 @@ const HeroSection = () => {
             writers across our growing community.
           </Typography>
           <Stack
+            component="form"
+            onSubmit={handleSubmit}
             direction={{
               xs: "column",
               sm: "row",
@@ -78,35 +95,49 @@ const HeroSection = () => {
               alignItems: "stretch",
             }}
           >
-            <TextField fullWidth placeholder="Search article..." size="medium"
+            <TextField
+              fullWidth
+              placeholder="Search articles..."
+              size="medium"
+              value={searchInput}
+              onChange={(event) =>
+                setSearchInput(
+                  event.target.value,
+                )
+              }
               slotProps={{
                 input: {
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SearchIcon sx={{
-                        color: "text.secondary",
-                      }} />
+                      <SearchIcon
+                        sx={{
+                          color:
+                            "text.secondary",
+                        }}
+                      />
                     </InputAdornment>
-                  )
-                }
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  bgcolor: "background.paper",
+                  ),
 
-                  "& fieldset": {
-                    borderColor: "divider",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: 'primary.light'
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "primary.main",
-                  },
-                }
+                  endAdornment:
+                    searchInput ? (
+                      <InputAdornment position="end">
+                        <IconButton
+                          size="small"
+                          type="button"
+                          onClick={onClear}
+                          edge="end"
+                          aria-label="Clear search"
+                        >
+                          <Clear />
+                        </IconButton>
+                      </InputAdornment>
+                    ) : null,
+                },
               }}
             />
+
             <Button
+              type="submit"
               variant="contained"
               size="large"
               disableElevation
@@ -122,7 +153,6 @@ const HeroSection = () => {
             >
               Search
             </Button>
-
           </Stack>
         </Box>
       </Container>

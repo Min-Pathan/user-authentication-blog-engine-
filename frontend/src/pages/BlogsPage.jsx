@@ -53,12 +53,6 @@ function BlogsPage() {
     setPage(1);
   };
 
-  // if (isLoading) {
-  //   return (
-
-  //   );
-  // }
-
   if (isError) {
     return (
       <Container
@@ -126,7 +120,7 @@ function BlogsPage() {
         }
       />
 
-         {isFetching ? (
+      {isFetching ? (
         <CardSkeleton
           count={3}
           imageHeight={220}

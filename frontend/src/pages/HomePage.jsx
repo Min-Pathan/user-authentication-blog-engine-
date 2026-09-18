@@ -22,6 +22,9 @@ import useInfiniteBlogs from "../features/blogs/queries/useInfiniteBlogs.js";
 import useCategories from "../features/categories/queries/useCategories.js";
 
 function HomePage() {
+  const [searchInput, setSearchInput] = useState("");
+  const [keyword, setKeyword] = useState("");
+
   const [
     selectedCategoryId,
     setSelectedCategoryId,
@@ -50,27 +53,11 @@ function HomePage() {
     isFetchingNextPage,
   } = useInfiniteBlogs({
     limit: 7,
+    keyword,
     categoryId:
       selectedCategoryId,
   });
 
-  /*
-    Infinite query data looks like:
-
-    data.pages = [
-      {
-        page: 1,
-        blogs: [...]
-      },
-      {
-        page: 2,
-        blogs: [...]
-      }
-    ]
-
-    We convert all pages
-    into one blog array.
-  */
   const blogs =
     data?.pages.flatMap(
       (page) =>
@@ -91,12 +78,6 @@ function HomePage() {
     );
   };
 
-  /*
-    Watch the bottom element.
-
-    When it enters the screen,
-    request another page.
-  */
   useEffect(() => {
     const element =
       loadMoreRef.current;
@@ -121,9 +102,6 @@ function HomePage() {
         },
         {
           root: null,
-
-          // Start loading slightly
-          // before reaching the bottom.
           rootMargin:
             "300px 0px",
 
@@ -144,21 +122,37 @@ function HomePage() {
     isFetchingNextPage,
   ]);
 
-  /*
-    Initial load OR category change.
-
-    We don't use this for
-    fetching the next page because
-    existing cards should remain visible.
-  */
   const showMainSkeleton =
     isLoading ||
     (isFetching &&
       !isFetchingNextPage);
 
+  const handleSearch = () => {
+    setKeyword(
+      searchInput.trim(),
+    );
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput("");
+    setKeyword("");
+  };
+
   return (
     <>
-      <HeroSection />
+      <HeroSection
+        searchInput={
+          searchInput
+        }
+        setSearchInput={
+          setSearchInput
+        }
+        onSearch={
+          handleSearch
+        }
+        onClear={
+          handleClearSearch
+        } />
 
       <Container
         maxWidth="lg"
@@ -208,21 +202,19 @@ function HomePage() {
                 "center",
             }}
           >
-            <Typography
-              variant="h6"
-            >
+            <Typography variant="h6">
               No blogs found
             </Typography>
 
             <Typography
               color="text.secondary"
-              sx={{
-                mt: 1,
-              }}
+              sx={{ mt: 1 }}
             >
-              There are no
-              stories in this
-              category yet.
+              {keyword
+                ? `No stories found for "${keyword}".`
+                : selectedCategoryId
+                  ? "There are no stories in this category yet."
+                  : "There are no stories available yet."}
             </Typography>
           </Box>
         ) : (
@@ -239,12 +231,12 @@ function HomePage() {
             {/* All remaining blogs */}
             {latestBlogs.length >
               0 && (
-              <LatestStories
-                blogs={
-                  latestBlogs
-                }
-              />
-            )}
+                <LatestStories
+                  blogs={
+                    latestBlogs
+                  }
+                />
+              )}
 
             {/* Next page loader */}
             {isFetchingNextPage && (
