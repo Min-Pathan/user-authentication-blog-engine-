@@ -2,7 +2,6 @@ import AppError from "../Errors/AppError.js";
 import { getBlogById } from "../models/blogModel.js";
 import {
   createComment,
-  getAllComments,
   getCommentById,
   updateComment,
   deleteComment,
@@ -28,28 +27,29 @@ const getCommentsByBlogIdController = async(req, res)=>{
   }
 }
 
-const createcommentController = async (req, res) => {
+const createcommentController = async (req, res, next) => {
   try {
-    const { comment, blog_id } = req.validateData;
+    const { comment, blog_id } = req.validatedData;
     const user_id = req.user.id;
-    if (!comment || comment.trim() === "") {
-      return res.status(400).json({
-        success: false,
-        message: "Enter comment",
-      });
-    }
 
     const blogExists = await getBlogById(blog_id);
+
     if (!blogExists) {
-     throw new AppError("Blog not found", 404)
+      throw new AppError("Blog not found", 404);
     }
-    const newComment = await createComment(comment, user_id, blog_id);
+
+    const newComment = await createComment(
+      comment,
+      user_id,
+      blog_id,
+    );
+
     return res.status(201).json({
       success: true,
       comment: newComment,
     });
   } catch (error) {
-    next(error)
+    return next(error);
   }
 };
 

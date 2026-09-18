@@ -1,308 +1,238 @@
-import { useState } from "react";
-
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-
 import {
+  Alert,
   Avatar,
   Box,
   Button,
   Divider,
-  IconButton,
   Paper,
+  Skeleton,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
+import useComments from "../../features/comments/queries/useComments";
+import { useState } from "react";
+import { useSelector } from "react-redux";
+import useCreateComment from "../../features/comments/mutations/useCreateComment";
+import { Link } from "react-router";
 
-const initialComments = [
-  {
-    id: 1,
-    username: "Aarav",
-    text: "Really useful article. The explanation was very clear.",
-    isOwn: false,
-  },
-  {
-    id: 2,
-    username: "Minaz",
-    text: "Thanks! Glad you found it useful.",
-    isOwn: true,
-  },
-];
+function CommentsSection({ blogId }) {
+  const [commentText, setCommentText] = useState("");
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
-function CommentsSection() {
-  const [comments, setComments] =
-    useState(initialComments);
+const {
+  mutate: postComment,
+  isPending: isPosting,
+  isError: isPostError,
+  error: postError,
+  reset: resetPostStatus,
+} = useCreateComment();
 
-  const [commentText, setCommentText] =
-    useState("");
-
-  const [editingId, setEditingId] =
-    useState(null);
-
-  const [editText, setEditText] =
-    useState("");
-
-  const handleAddComment = () => {
-    const value = commentText.trim();
-
-    if (!value) {
+  const trimmedComment = commentText.trim();
+  const handlePostComment = (event) => {
+    event.preventDefault();
+    if (!isAuthenticated || isPosting || trimmedComment.length < 2 || trimmedComment.length > 200) {
       return;
     }
+    postComment(
+      {
+        comment: trimmedComment, blog_id: blogId
+      },
+      {
+        onSuccess: () => {
+          setCommentText("")
+        }
+      }
+    )
+  }
+  const { data, isLoading, isError, error } =
+    useComments(blogId);
 
-    const newComment = {
-      id: Date.now(),
-      username: "Minaz",
-      text: value,
-      isOwn: true,
-    };
-
-    setComments((previous) => [
-      newComment,
-      ...previous,
-    ]);
-
-    setCommentText("");
-  };
-
-  const handleDeleteComment = (id) => {
-    setComments((previous) =>
-      previous.filter(
-        (comment) => comment.id !== id,
-      ),
-    );
-  };
-
-  const handleStartEdit = (comment) => {
-    setEditingId(comment.id);
-    setEditText(comment.text);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setEditText("");
-  };
-
-  const handleSaveEdit = (id) => {
-    const value = editText.trim();
-
-    if (!value) {
-      return;
-    }
-
-    setComments((previous) =>
-      previous.map((comment) =>
-        comment.id === id
-          ? {
-              ...comment,
-              text: value,
-            }
-          : comment,
-      ),
-    );
-
-    setEditingId(null);
-    setEditText("");
-  };
+  const comments = data?.comments ?? [];
 
   return (
     <Box sx={{ mt: 8 }}>
       <Typography
         variant="h5"
-        sx={{
-          fontWeight: 800,
-        }}
+        sx={{ fontWeight: 800 }}
       >
-        Comments ({comments.length})
+        Comments ({data?.count ?? 0})
       </Typography>
 
       <Typography
         color="text.secondary"
-        sx={{
-          mt: 0.75,
-          mb: 3,
-        }}
+        sx={{ mt: 0.75, mb: 3 }}
       >
         Join the conversation and share your thoughts.
       </Typography>
-
-      {/* Add comment */}
-      <Paper
-        elevation={0}
-        sx={{
-          p: 3,
-          border: "1px solid",
-          borderColor: "divider",
-          mb: 4,
-        }}
-      >
-        <TextField
-          value={commentText}
-          onChange={(event) =>
-            setCommentText(event.target.value)
-          }
-          placeholder="Write a comment..."
-          multiline
-          rows={3}
-          fullWidth
-        />
-
-        <Stack
-          direction="row"
-          justifyContent="flex-end"
-          sx={{ mt: 2 }}
+      {isAuthenticated ? (
+        <Paper
+          component="form"
+          onSubmit={handlePostComment}
+          elevation={0}
+          sx={{
+            p: 3,
+            mb: 4,
+            border: "1px solid",
+            borderColor: "divider",
+          }}
         >
-          <Button
-            variant="contained"
-            disableElevation
-            disabled={!commentText.trim()}
-            onClick={handleAddComment}
-          >
-            Post Comment
-          </Button>
-        </Stack>
-      </Paper>
-
-      {/* Comment list */}
-      <Stack spacing={2}>
-        {comments.map((comment) => (
-          <Paper
-            key={comment.id}
-            elevation={0}
-            sx={{
-              p: 3,
-              border: "1px solid",
-              borderColor: "divider",
+          <TextField
+            label="Your comment"
+            placeholder="Write a comment..."
+            value={commentText}
+            onChange={(event) => {
+              setCommentText(event.target.value);
+              resetPostStatus();
             }}
+            multiline
+            rows={3}
+            fullWidth
+            disabled={isPosting}
+            error={trimmedComment.length > 200}
+            helperText={`${trimmedComment.length}/200 characters · Minimum 2`}
+          />
+
+          {isPostError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {postError?.response?.status === 401
+                ? "Your session has expired. Please log in again."
+                : postError?.response?.data?.message ||
+                "Could not post your comment. Please try again."}
+            </Alert>
+          )}
+
+
+          <Stack
+            direction="row"
+            justifyContent="flex-end"
+            sx={{ mt: 2 }}
           >
-            <Stack
-              direction="row"
-              spacing={2}
-              alignItems="flex-start"
+            <Button
+              type="submit"
+              variant="contained"
+              disableElevation
+              disabled={
+                isPosting ||
+                trimmedComment.length < 2 ||
+                trimmedComment.length > 200
+              }
             >
-              <Avatar
+              {isPosting ? "Posting..." : "Post Comment"}
+            </Button>
+          </Stack>
+        </Paper>
+      ) : (
+        <Alert severity="info" sx={{ mb: 4 }}>
+          <Link to="/login">Log in</Link> to post a comment.
+        </Alert>
+      )}
+      {isLoading && (
+        <Stack spacing={2}>
+          {[1, 2].map((item) => (
+            <Paper
+              key={item}
+              elevation={0}
+              sx={{
+                p: 3,
+                border: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              <Stack
+                direction="row"
+                spacing={2}
+                alignItems="flex-start"
+              >
+                <Skeleton
+                  variant="circular"
+                  width={40}
+                  height={40}
+                />
+
+                <Box sx={{ flexGrow: 1 }}>
+                  <Skeleton width={120} />
+                  <Skeleton width="85%" />
+                  <Skeleton width="60%" />
+                </Box>
+              </Stack>
+            </Paper>
+          ))}
+        </Stack>
+      )}
+
+      {isError && (
+        <Alert severity="error">
+          {error?.response?.data?.message ||
+            "Failed to load comments."}
+        </Alert>
+      )}
+
+      {!isLoading && !isError && comments.length > 0 && (
+        <Stack spacing={2}>
+          {comments.map((comment) => {
+            const formattedDate = new Date(
+              comment.created_at,
+            ).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            });
+
+            return (
+              <Paper
+                key={comment.id}
+                elevation={0}
                 sx={{
-                  width: 40,
-                  height: 40,
-                  bgcolor: "primary.main",
+                  p: 3,
+                  border: "1px solid",
+                  borderColor: "divider",
                 }}
               >
-                {comment.username
-                  ?.charAt(0)
-                  .toUpperCase()}
-              </Avatar>
-
-              <Box sx={{ flexGrow: 1 }}>
                 <Stack
                   direction="row"
-                  justifyContent="space-between"
-                  alignItems="center"
                   spacing={2}
+                  alignItems="flex-start"
                 >
-                  <Typography
+                  <Avatar
                     sx={{
-                      fontWeight: 700,
+                      width: 40,
+                      height: 40,
+                      bgcolor: "primary.main",
                     }}
                   >
-                    {comment.username}
-                  </Typography>
+                    {comment.username
+                      ?.charAt(0)
+                      .toUpperCase() || "?"}
+                  </Avatar>
 
-                  {comment.isOwn &&
-                    editingId !== comment.id && (
-                      <Stack direction="row">
-                        <IconButton
-                          size="small"
-                          aria-label="Edit comment"
-                          onClick={() =>
-                            handleStartEdit(
-                              comment,
-                            )
-                          }
-                        >
-                          <EditOutlinedIcon
-                            fontSize="small"
-                          />
-                        </IconButton>
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography sx={{ fontWeight: 700 }}>
+                      {comment.username}
+                    </Typography>
 
-                        <IconButton
-                          size="small"
-                          color="error"
-                          aria-label="Delete comment"
-                          onClick={() =>
-                            handleDeleteComment(
-                              comment.id,
-                            )
-                          }
-                        >
-                          <DeleteOutlineIcon
-                            fontSize="small"
-                          />
-                        </IconButton>
-                      </Stack>
-                    )}
-                </Stack>
-
-                {editingId ===
-                comment.id ? (
-                  <Box sx={{ mt: 1.5 }}>
-                    <TextField
-                      value={editText}
-                      onChange={(event) =>
-                        setEditText(
-                          event.target.value,
-                        )
-                      }
-                      multiline
-                      rows={2}
-                      fullWidth
-                    />
-
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      sx={{ mt: 1.5 }}
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
                     >
-                      <Button
-                        size="small"
-                        variant="contained"
-                        onClick={() =>
-                          handleSaveEdit(
-                            comment.id,
-                          )
-                        }
-                      >
-                        Save
-                      </Button>
+                      {formattedDate}
+                    </Typography>
 
-                      <Button
-                        size="small"
-                        color="inherit"
-                        onClick={
-                          handleCancelEdit
-                        }
-                      >
-                        Cancel
-                      </Button>
-                    </Stack>
+                    <Typography
+                      color="text.secondary"
+                      sx={{ mt: 0.75, lineHeight: 1.7 }}
+                    >
+                      {comment.comment}
+                    </Typography>
                   </Box>
-                ) : (
-                  <Typography
-                    color="text.secondary"
-                    sx={{
-                      mt: 0.75,
-                      lineHeight: 1.7,
-                    }}
-                  >
-                    {comment.text}
-                  </Typography>
-                )}
-              </Box>
-            </Stack>
-          </Paper>
-        ))}
-      </Stack>
+                </Stack>
+              </Paper>
+            );
+          })}
+        </Stack>
+      )}
 
-      {comments.length === 0 && (
+      {!isLoading && !isError && comments.length === 0 && (
         <>
           <Divider sx={{ mb: 3 }} />
 

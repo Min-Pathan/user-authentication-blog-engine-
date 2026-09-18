@@ -23,10 +23,39 @@ import useBlog from "../features/blogs/queries/useBlog.js";
 function BlogDetailsPage() {
     const { id } = useParams();
     const [liked, setLiked] = useState(false);
-    const { data, isLoading, isFetching, isError, error } = useBlog(id);
-    const blog = data?.blog
+    const { data, isLoading, isError, error } = useBlog(id);
+    const blog = data?.blog;
 
-    if (!blog) {
+    if (isLoading) {
+        return (
+            <Container
+                maxWidth="md"
+                sx={{
+                    py: {
+                        xs: 4,
+                        md: 7,
+                    },
+                }}
+            >
+                <BlogDetailsSkeleton />
+            </Container>
+        );
+    }
+
+    const isNotFound = error?.response?.status === 404;
+
+    if (isError && !isNotFound) {
+        return (
+            <Container maxWidth="md" sx={{ py: 8 }}>
+                <Alert severity="error">
+                    {error?.response?.data?.message ||
+                        "Failed to load blog."}
+                </Alert>
+            </Container>
+        );
+    }
+
+    if (isNotFound || !blog) {
         return (
             <Container
                 maxWidth="md"
@@ -92,40 +121,6 @@ function BlogDetailsPage() {
 
     const authorInitial =
         username?.charAt(0).toUpperCase() || "?";
-
-        if (
-  isLoading ||
-  isFetching
-) {
-  return (
-    <Container
-      maxWidth="md"
-      sx={{
-        py: {
-          xs: 4,
-          md: 7,
-        },
-      }}
-    >
-      <BlogDetailsSkeleton />
-    </Container>
-  );
-}
-
-if (isError) {
-  return (
-    <Container
-      maxWidth="md"
-      sx={{ py: 8 }}
-    >
-      <Alert severity="error">
-        {error?.response
-          ?.data?.message ||
-          "Failed to load blog."}
-      </Alert>
-    </Container>
-  );
-}
 
     return (
         <Box
@@ -318,7 +313,7 @@ if (isError) {
                     {content}
                 </Typography>
 
-                <CommentsSection />
+                <CommentsSection blogId={blog.id} />
             </Container>
         </Box>
     );
