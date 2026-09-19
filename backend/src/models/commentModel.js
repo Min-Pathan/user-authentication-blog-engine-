@@ -4,17 +4,25 @@ const getAllComments = async()=>{
     
 }
 
-const getCommentsByBlogId = async(blogId)=>{
-    const query = `
-    select comments.id, comments.comment, comments.created_at,
-    users.username from comments join users 
-    on users.id = comments.user_id
-    where comments.blog_id=$1 
-    order by comments.created_at desc`
-     const result = await pool.query(query, [blogId]);
+const getCommentsByBlogId = async (blogId) => {
+  const query = `
+    SELECT
+      comments.id,
+      comments.comment,
+      comments.user_id,
+      comments.blog_id,
+      comments.created_at,
+      users.username
+    FROM comments
+    JOIN users ON users.id = comments.user_id
+    WHERE comments.blog_id = $1
+    ORDER BY comments.created_at DESC
+  `;
+
+  const result = await pool.query(query, [blogId]);
 
   return result.rows;
-}
+};
 
 const createComment = async(comment, user_id, blog_id)=>{
     const query =

@@ -68,7 +68,7 @@ const getCommentByIdController = async (req, res, next) => {
 
 const updateCommentController = async (req, res, next) => {
   try {
-    const { comment } = req.body;
+    const { comment } = req.validatedData;
     const id = req.params.id;
     const user_id = req.user.id;
 

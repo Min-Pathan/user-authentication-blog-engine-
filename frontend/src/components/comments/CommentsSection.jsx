@@ -1,6 +1,5 @@
 import {
   Alert,
-  Avatar,
   Box,
   Button,
   Divider,
@@ -15,6 +14,7 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import useCreateComment from "../../features/comments/mutations/useCreateComment";
 import { Link } from "react-router";
+import CommentItem from "./CommentItem";
 
 function CommentsSection({ blogId }) {
   const [commentText, setCommentText] = useState("");
@@ -170,65 +170,13 @@ const {
 
       {!isLoading && !isError && comments.length > 0 && (
         <Stack spacing={2}>
-          {comments.map((comment) => {
-            const formattedDate = new Date(
-              comment.created_at,
-            ).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            });
-
-            return (
-              <Paper
-                key={comment.id}
-                elevation={0}
-                sx={{
-                  p: 3,
-                  border: "1px solid",
-                  borderColor: "divider",
-                }}
-              >
-                <Stack
-                  direction="row"
-                  spacing={2}
-                  alignItems="flex-start"
-                >
-                  <Avatar
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      bgcolor: "primary.main",
-                    }}
-                  >
-                    {comment.username
-                      ?.charAt(0)
-                      .toUpperCase() || "?"}
-                  </Avatar>
-
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography sx={{ fontWeight: 700 }}>
-                      {comment.username}
-                    </Typography>
-
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                    >
-                      {formattedDate}
-                    </Typography>
-
-                    <Typography
-                      color="text.secondary"
-                      sx={{ mt: 0.75, lineHeight: 1.7 }}
-                    >
-                      {comment.comment}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Paper>
-            );
-          })}
+         {comments.map((comment) => (
+      <CommentItem
+        key={comment.id}
+        comment={comment}
+        blogId={blogId}
+      />
+    ))}
         </Stack>
       )}
 

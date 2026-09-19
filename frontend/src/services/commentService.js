@@ -17,3 +17,19 @@ export const createComment = async(payload)=>{
 
     return response.data
 }
+
+export const updateComment = async({ id, comment})=>{
+    const response = await axiosInstance.put( `/api/comments/${id}`,
+    { comment },
+  );
+
+  return response.data;
+};
+
+export const deleteComment = async (id) => {
+  const response = await axiosInstance.delete(
+    `/api/comments/${id}`,
+  );
+
+  return response.data;
+};
