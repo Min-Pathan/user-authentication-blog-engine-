@@ -1,6 +1,4 @@
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 
 import {
     Alert,
@@ -15,14 +13,13 @@ import {
 } from "@mui/material";
 
 import { Link, useParams } from "react-router";
-import { useState } from "react";
 import CommentsSection from "../components/comments/CommentsSection.jsx";
 import BlogDetailsSkeleton from "../components/common/BlogDetailsSkeleton.jsx";
 import useBlog from "../features/blogs/queries/useBlog.js";
+import LikeButton from "../components/blogs/LikeButton.jsx";
 
 function BlogDetailsPage() {
     const { id } = useParams();
-    const [liked, setLiked] = useState(false);
     const { data, isLoading, isError, error } = useBlog(id);
     const blog = data?.blog;
 
@@ -96,10 +93,6 @@ function BlogDetailsPage() {
             </Container>
         );
     }
-
-    const handleLike = () => {
-        setLiked((previous) => !previous);
-    };
 
     const {
         title,
@@ -231,26 +224,11 @@ function BlogDetailsPage() {
                         </Box>
                     </Stack>
 
-                    <Button
-                        type="button"
-                        onClick={handleLike}
-                        startIcon={
-                            liked ? (
-                                <FavoriteIcon />
-                            ) : (
-                                <FavoriteBorderIcon />
-                            )
-                        }
-                        color={liked ? "error" : "inherit"}
-                        sx={{
-                            minWidth: 0,
-                            color: liked
-                                ? "error.main"
-                                : "text.secondary",
-                        }}
-                    >
-                        {blog.like_count}
-                    </Button>
+                    <LikeButton
+                        key={blog.id}
+                        blogId={blog.id}
+                        initialCount={blog.like_count}
+                    />
                 </Stack>
 
                 <Divider

@@ -240,7 +240,7 @@ function CommentItem({ comment, blogId }) {
                                     >
                                         <IconButton
                                             aria-label="Edit blog"
-                                            onClick={() =>
+                                            onClick={
                                                 handleStartEdit
                                             }
                                             sx={{
@@ -257,7 +257,7 @@ function CommentItem({ comment, blogId }) {
 
                                         <IconButton
                                             aria-label="Delete comment"
-                                            onClick={() =>
+                                            onClick={
                                                 handleOpenDelete
                                             }
                                             sx={{

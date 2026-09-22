@@ -7,6 +7,7 @@ import {
   getBlogById,
   getBlogsCount,
   getMyBlogs,
+  getMyBlogsCount,
   updateBlog,
 } from "../models/blogModel.js";
 
@@ -285,21 +286,48 @@ const getAllBlogsController = async (req, res) => {
   }
 };
 
-const getMyBlogsController = async (req, res) => {
+const getMyBlogsController = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const blogs = await getMyBlogs(userId);
+
+    const page = Number(req.query.page ?? 1);
+    const limit = Number(req.query.limit ?? 6);
+
+    if (
+      !Number.isSafeInteger(page) ||
+      page < 1 ||
+      !Number.isSafeInteger(limit) ||
+      limit < 1 ||
+      limit > 100
+    ) {
+      throw new AppError(
+        "Page must be a positive integer and limit must be between 1 and 100",
+        400,
+      );
+    }
+
+    const offset = (page - 1) * limit;
+
+    if (!Number.isSafeInteger(offset)) {
+      throw new AppError("Page is too large", 400);
+    }
+
+    const [blogs, totalBlogs] = await Promise.all([
+      getMyBlogs(userId, limit, offset),
+      getMyBlogsCount(userId),
+    ]);
+
     return res.status(200).json({
       success: true,
+      totalBlogs,
+      page,
+      limit,
+      totalPages: Math.ceil(totalBlogs / limit),
       count: blogs.length,
       blogs,
     });
-  }
-  catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  } catch (error) {
+    return next(error);
   }
 };
 

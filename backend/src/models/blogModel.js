@@ -173,20 +173,61 @@ const getBlogsCount = async (
   );
 };
 
-const getMyBlogs = async (userId) => {
-  const query = `SELECT
-    blogs.id,
-    blogs.title,
-    blogs.content,
-    blogs.user_id,
-    users.username
-FROM blogs
-JOIN users
-ON blogs.user_id = users.id where blogs.user_id =$1
-order by blogs.created_at desc;`;
+const getMyBlogs = async (userId, limit, offset) => {
+  const query = `
+    SELECT
+      blogs.id,
+      blogs.title,
+      blogs.content,
+      blogs.user_id,
+      blogs.category_id,
+      blogs.created_at,
+      blogs.media_url,
+      blogs.media_type,
+      users.username,
+      categories.name AS category,
+      COUNT(DISTINCT likes.id) AS like_count,
+      COUNT(DISTINCT comments.id) AS comment_count
+    FROM blogs
+    JOIN users
+      ON users.id = blogs.user_id
+    LEFT JOIN categories
+      ON categories.id = blogs.category_id
+    LEFT JOIN likes
+      ON likes.blog_id = blogs.id
+    LEFT JOIN comments
+      ON comments.blog_id = blogs.id
+    WHERE blogs.user_id = $1
+    GROUP BY
+      blogs.id,
+      users.username,
+      categories.name
+    ORDER BY blogs.created_at DESC, blogs.id DESC
+    LIMIT $2 OFFSET $3
+  `;
 
-  const result = await pool.query(query, [userId]);
-  return result.rows;
+  const result = await pool.query(query, [
+    userId,
+    limit,
+    offset,
+  ]);
+
+  return result.rows.map((blog) => ({
+    ...blog,
+    like_count: Number(blog.like_count),
+    comment_count: Number(blog.comment_count),
+  }));
+};
+
+const getMyBlogsCount = async (userId) => {
+  const result = await pool.query(
+    `SELECT COUNT(*) AS total
+     FROM blogs
+     WHERE user_id = $1`,
+    [userId],
+  );
+
+  return Number(result.rows[0].total);
 };
 
 const getBlogById = async (blogId) => {
@@ -275,4 +316,5 @@ export {
   getBlogById,
   updateBlog,
   deleteBlog,
+  getMyBlogsCount
 };

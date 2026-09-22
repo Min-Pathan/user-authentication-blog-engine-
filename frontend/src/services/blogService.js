@@ -34,3 +34,17 @@ export const getBlogById =
 
     return response.data;
   };
+
+export const getMyBlogs = async ({
+  page = 1,
+  limit = 6,
+} = {}) => {
+  const response = await axiosInstance.get(
+    "/api/blogs/my-blogs",
+    {
+      params: { page, limit },
+    },
+  );
+
+  return response.data;
+};

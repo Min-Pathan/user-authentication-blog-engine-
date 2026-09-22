@@ -2,6 +2,7 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 
 import {
+  Alert,
   Box,
   Button,
   Chip,
@@ -12,6 +13,7 @@ import {
   DialogTitle,
   IconButton,
   Paper,
+  Skeleton,
   Stack,
   Typography,
 } from "@mui/material";
@@ -20,13 +22,26 @@ import { useState } from "react";
 
 import { Link } from "react-router";
 
-import mockBlogs from "../../mocks/blogs.js";
+import useMyBlogs from "../../features/blogs/queries/useMyBlogs.js";
+import PaginationCustom from "../../components/common/PaginationCustom.jsx";
 
 function MyBlogsPage() {
-  // Temporary until GET /api/blogs/my-blogs integration
-  const [myBlogs, setMyBlogs] = useState(() =>
-    mockBlogs.slice(0, 4),
-  );
+  const [page, setPage] = useState(1);
+
+  const [itemPerPage, setItemPerPage] = useState(6);
+
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useMyBlogs({
+    page, limit: itemPerPage
+  });
+
+  const myBlogs = data?.blogs ?? [];
+  const totalBlogs = data?.totalBlogs ?? 0;
 
   const [blogToDelete, setBlogToDelete] =
     useState(null);
@@ -36,17 +51,6 @@ function MyBlogsPage() {
   };
 
   const handleCloseDelete = () => {
-    setBlogToDelete(null);
-  };
-
-  const handleConfirmDelete = () => {
-    setMyBlogs((previousBlogs) =>
-      previousBlogs.filter(
-        (blog) =>
-          blog.id !== blogToDelete.id,
-      ),
-    );
-
     setBlogToDelete(null);
   };
 
@@ -96,180 +100,221 @@ function MyBlogsPage() {
         </Button>
       </Stack>
 
-      {myBlogs.length > 0 ? (
+      {isLoading ? (
         <Stack spacing={2}>
-          {myBlogs.map((blog) => (
-            <Paper
-              key={blog.id}
-              elevation={0}
-              sx={{
-                p: {
-                  xs: 2,
-                  sm: 2.5,
-                },
-
-                border: "1px solid",
-                borderColor: "divider",
-
-                transition:
-                  "border-color 0.2s ease",
-
-                "&:hover": {
-                  borderColor: "primary.light",
-                },
-              }}
-            >
-              <Stack
-                direction={{
-                  xs: "column",
-                  md: "row",
-                }}
-                spacing={2.5}
-                alignItems={{
-                  xs: "stretch",
-                  md: "center",
-                }}
-              >
-                {/* Image */}
-                {blog.media_url && (
-                  <Box
-                    component="img"
-                    src={blog.media_url}
-                    alt={blog.title}
-                    sx={{
-                      width: {
-                        xs: "100%",
-                        md: 150,
-                      },
-
-                      height: {
-                        xs: 180,
-                        md: 100,
-                      },
-
-                      objectFit: "cover",
-                      borderRadius: 2,
-                      flexShrink: 0,
-                    }}
-                  />
-                )}
-
-                {/* Info */}
-                <Box
-                  sx={{
-                    flexGrow: 1,
-                    minWidth: 0,
-                  }}
-                >
-                  <Chip
-                    label={blog.category}
-                    size="small"
-                    sx={{
-                      mb: 1,
-                      bgcolor: "#EFF6FF",
-                      color: "primary.main",
-                    }}
-                  />
-
-                  <Typography
-                    sx={{
-                      fontWeight: 700,
-                      fontSize: "1.05rem",
-                    }}
-                  >
-                    {blog.title}
-                  </Typography>
-
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{
-                      mt: 0.75,
-
-                      display: "-webkit-box",
-                      WebkitLineClamp: 1,
-                      WebkitBoxOrient:
-                        "vertical",
-                      overflow: "hidden",
-                    }}
-                  >
-                    {blog.content}
-                  </Typography>
-
-                  <Stack
-                    direction="row"
-                    spacing={2}
-                    sx={{ mt: 1.5 }}
-                  >
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                    >
-                      ♥ {blog.like_count ?? 0} likes
-                    </Typography>
-
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                    >
-                      💬 {blog.comment_count ?? 0} comments
-                    </Typography>
-                  </Stack>
-                </Box>
-
-                {/* Actions */}
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  sx={{
-                    alignSelf: {
-                      xs: "flex-end",
-                      md: "center",
-                    },
-                  }}
-                >
-                  <IconButton
-                    component={Link}
-                    to={`/dashboard/blogs/${blog.id}/edit`}
-                    aria-label="Edit blog"
-                    sx={{
-                      border: "1px solid",
-                      borderColor: "divider",
-
-                      "&:hover": {
-                        color: "primary.main",
-                        borderColor:
-                          "primary.main",
-                      },
-                    }}
-                  >
-                    <EditOutlinedIcon />
-                  </IconButton>
-
-                  <IconButton
-                    aria-label="Delete blog"
-                    onClick={() =>
-                      handleDeleteClick(blog)
-                    }
-                    sx={{
-                      border: "1px solid",
-                      borderColor: "divider",
-
-                      "&:hover": {
-                        color: "error.main",
-                        borderColor:
-                          "error.main",
-                        bgcolor: "#FEF2F2",
-                      },
-                    }}
-                  >
-                    <DeleteOutlineIcon />
-                  </IconButton>
-                </Stack>
-              </Stack>
-            </Paper>
+          {[1, 2, 3].map((item) => (
+            <Skeleton
+              key={item}
+              variant="rounded"
+              height={150}
+            />
           ))}
         </Stack>
+      ) : isError ? (
+        <Alert
+          severity="error"
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              onClick={() => refetch()}
+            >
+              Retry
+            </Button>
+          }
+        >
+          {error?.response?.status === 401
+            ? "Your session has expired. Please log in again."
+            : error?.response?.data?.message ||
+            error?.message ||
+            "Failed to load your blogs."}
+        </Alert>
+      ) : myBlogs.length > 0 ? (
+        <>
+          <Stack spacing={2}>
+
+            {myBlogs.map((blog) => (
+              <Paper
+                key={blog.id}
+                elevation={0}
+                sx={{
+                  p: {
+                    xs: 2,
+                    sm: 2.5,
+                  },
+
+                  border: "1px solid",
+                  borderColor: "divider",
+
+                  transition:
+                    "border-color 0.2s ease",
+
+                  "&:hover": {
+                    borderColor: "primary.light",
+                  },
+                }}
+              >
+                <Stack
+                  direction={{
+                    xs: "column",
+                    md: "row",
+                  }}
+                  spacing={2.5}
+                  alignItems={{
+                    xs: "stretch",
+                    md: "center",
+                  }}
+                >
+                  {/* Image */}
+                  {blog.media_url && (
+                    <Box
+                      component={blog.media_type === "video" ? "video" : "img"}
+                      src={blog.media_url}
+                      alt={blog.media_type === "video" ? undefined : blog.title}
+                      controls={blog.media_type === "video" ? true : undefined}
+                      preload={blog.media_type === "video" ? "metadata" : undefined}
+                      sx={{
+                        width: { xs: "100%", md: 150 },
+                        height: { xs: 180, md: 100 },
+                        objectFit: "cover",
+                        borderRadius: 2,
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+
+                  {/* Info */}
+                  <Box
+                    sx={{
+                      flexGrow: 1,
+                      minWidth: 0,
+                    }}
+                  >
+                    <Chip
+                      label={blog.category || "Uncategorized"}
+                      size="small"
+                      sx={{
+                        mb: 1,
+                        bgcolor: "#EFF6FF",
+                        color: "primary.main",
+                      }}
+                    />
+
+                    <Typography
+                      component={Link}
+                      to={`/blogs/${blog.id}`}
+                      sx={{
+                        color: "text.primary",
+                        textDecoration: "none",
+
+                        fontWeight: 700,
+                        fontSize: "1.05rem",
+                        "&:hover": {
+                          color: "primary.main",
+                        },
+                      }}
+                    >
+                      {blog.title}
+                    </Typography>
+
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        mt: 0.75,
+
+                        display: "-webkit-box",
+                        WebkitLineClamp: 1,
+                        WebkitBoxOrient:
+                          "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {blog.content}
+                    </Typography>
+
+                    <Stack
+                      direction="row"
+                      spacing={2}
+                      sx={{ mt: 1.5 }}
+                    >
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                      >
+                        ♥ {blog.like_count ?? 0} likes
+                      </Typography>
+
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                      >
+                        💬 {blog.comment_count ?? 0} comments
+                      </Typography>
+                    </Stack>
+                  </Box>
+
+                  {/* Actions */}
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    sx={{
+                      alignSelf: {
+                        xs: "flex-end",
+                        md: "center",
+                      },
+                    }}
+                  >
+                    <IconButton
+                      component={Link}
+                      to={`/dashboard/blogs/${blog.id}/edit`}
+                      aria-label="Edit blog"
+                      sx={{
+                        border: "1px solid",
+                        borderColor: "divider",
+
+                        "&:hover": {
+                          color: "primary.main",
+                          borderColor:
+                            "primary.main",
+                        },
+                      }}
+                    >
+                      <EditOutlinedIcon />
+                    </IconButton>
+
+                    <IconButton
+                      aria-label="Delete blog"
+                      onClick={() =>
+                        handleDeleteClick(blog)
+                      }
+                      sx={{
+                        border: "1px solid",
+                        borderColor: "divider",
+
+                        "&:hover": {
+                          color: "error.main",
+                          borderColor:
+                            "error.main",
+                          bgcolor: "#FEF2F2",
+                        },
+                      }}
+                    >
+                      <DeleteOutlineIcon />
+                    </IconButton>
+                  </Stack>
+                </Stack>
+              </Paper>
+            ))}
+          </Stack>
+          <PaginationCustom
+            page={page}
+            rowCount={totalBlogs}
+            itemPerPage={itemPerPage}
+            setCurrentPage={setPage}
+            setItemPerPage={setItemPerPage}
+          />
+        </>
       ) : (
         <Paper
           elevation={0}
@@ -280,17 +325,11 @@ function MyBlogsPage() {
             borderColor: "divider",
           }}
         >
-          <Typography
-            variant="h6"
-            sx={{ fontWeight: 700 }}
-          >
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
             No blogs yet
           </Typography>
 
-          <Typography
-            color="text.secondary"
-            sx={{ mt: 1 }}
-          >
+          <Typography color="text.secondary" sx={{ mt: 1 }}>
             Create your first blog and start sharing your ideas.
           </Typography>
 
@@ -304,6 +343,7 @@ function MyBlogsPage() {
           </Button>
         </Paper>
       )}
+
       <Dialog
         open={Boolean(blogToDelete)}
         onClose={handleCloseDelete}
@@ -340,7 +380,7 @@ function MyBlogsPage() {
             variant="contained"
             color="error"
             disableElevation
-            onClick={handleConfirmDelete}
+            disabled
           >
             Delete
           </Button>
