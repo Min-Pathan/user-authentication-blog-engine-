@@ -24,11 +24,18 @@ import { Link } from "react-router";
 
 import useMyBlogs from "../../features/blogs/queries/useMyBlogs.js";
 import PaginationCustom from "../../components/common/PaginationCustom.jsx";
+import { useToast } from "../../context/ToastContext.js";
+import useDeleteBlog from "../../features/blogs/mutations/useDeleteBlog.js";
 
 function MyBlogsPage() {
+  const { showToast } = useToast();
+
   const [page, setPage] = useState(1);
 
   const [itemPerPage, setItemPerPage] = useState(6);
+
+  const { mutate: removeBlog, isPending: isDeleting, error: deleteError, reset: resetDelete } = useDeleteBlog();
+  const [blogToDelete, setBlogToDelete] = useState(null);
 
   const {
     data,
@@ -43,15 +50,36 @@ function MyBlogsPage() {
   const myBlogs = data?.blogs ?? [];
   const totalBlogs = data?.totalBlogs ?? 0;
 
-  const [blogToDelete, setBlogToDelete] =
-    useState(null);
-
   const handleDeleteClick = (blog) => {
+    resetDelete();
     setBlogToDelete(blog);
   };
 
   const handleCloseDelete = () => {
+    if (isDeleting) return;
+
     setBlogToDelete(null);
+    resetDelete();
+  };
+
+  const handleConfirmDelete = () => {
+    if (!blogToDelete || isDeleting) return;
+
+    removeBlog(blogToDelete.id, {
+      onSuccess: (response) => {
+        setBlogToDelete(null);
+
+        showToast(
+          response.message || "Blog deleted successfully",
+          "success",
+        );
+
+        // Avoid staying on an empty final page.
+        if (myBlogs.length === 1 && page > 1) {
+          setPage((previous) => previous - 1);
+        }
+      },
+    });
   };
 
   return (
@@ -348,30 +376,38 @@ function MyBlogsPage() {
         open={Boolean(blogToDelete)}
         onClose={handleCloseDelete}
         maxWidth="xs"
-        fullWidth>
+        fullWidth
+        aria-labelledby="delete-blog-title"
+      >
         <DialogTitle
-          sx={{
-            fontWeight: 700,
-          }}>
+          id="delete-blog-title"
+          sx={{ fontWeight: 700 }}
+        >
           Delete blog?
         </DialogTitle>
+
         <DialogContent>
           <DialogContentText>
             Are you sure you want to delete{" "}
-            <strong>
-              {blogToDelete?.title}
-            </strong>
-            ?
+            <strong>{blogToDelete?.title}</strong>?
+            This cannot be undone.
           </DialogContentText>
+
+          {deleteError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {deleteError?.response?.status === 401
+                ? "Your session has expired. Please log in again."
+                : deleteError?.response?.data?.message ||
+                "Could not delete this blog. Please try again."}
+            </Alert>
+          )}
         </DialogContent>
-        <DialogActions
-          sx={{
-            px: 3,
-            pb: 3,
-          }}>
+
+        <DialogActions sx={{ px: 3, pb: 3 }}>
           <Button
             color="inherit"
             onClick={handleCloseDelete}
+            disabled={isDeleting}
           >
             Cancel
           </Button>
@@ -380,9 +416,10 @@ function MyBlogsPage() {
             variant="contained"
             color="error"
             disableElevation
-            disabled
+            onClick={handleConfirmDelete}
+            disabled={isDeleting}
           >
-            Delete
+            {isDeleting ? "Deleting..." : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>

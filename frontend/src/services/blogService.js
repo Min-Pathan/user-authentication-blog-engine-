@@ -48,3 +48,29 @@ export const getMyBlogs = async ({
 
   return response.data;
 };
+
+export const createBlog = async (formData) => {
+  const response = await axiosInstance.post(
+    "/api/blogs/createBlog",
+    formData,
+  );
+
+  return response.data;
+};
+
+export const updateBlog = async({id, formData})=>{
+  const response = await axiosInstance.put(
+    `/api/blogs/${id}`,
+    formData
+  )
+
+  return response.data
+}
+
+export const deleteBlog = async (id) => {
+  const response = await axiosInstance.delete(
+    `/api/blogs/${id}`,
+  );
+
+  return response.data;
+};

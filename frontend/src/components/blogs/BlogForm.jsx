@@ -20,15 +20,7 @@ import {
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { blogSchema } from "../../features/blogs/validation/blogSchema";
-
-
-const categories = [
-  "React",
-  "JavaScript",
-  "Node.js",
-  "Career",
-  "Design",
-];
+import useCategories from "../../features/categories/queries/useCategories";
 
 const emptyValues = {
   title: "",
@@ -70,12 +62,14 @@ function BlogForm({
     },
   });
 
-  /*
-   * Important for Edit page.
-   *
-   * Later the blog may arrive asynchronously from an API.
-   * reset() allows React Hook Form to receive those values.
-   */
+const {
+  data: categoryData,
+  isLoading: categoriesLoading,
+  isError: categoriesError,
+} = useCategories();
+
+const categories = categoryData?.categories ?? [];
+
   useEffect(() => {
     reset({
       title: defaultValues?.title ?? "",
@@ -212,30 +206,48 @@ function BlogForm({
             />
 
             {/* Category */}
-            <Controller
-              name="category"
-              control={control}
-              render={({ field }) => (
-                <Autocomplete
-                  options={categories}
-                  value={field.value || null}
-                  onChange={(_, newValue) => {
-                    field.onChange(newValue || "");
-                  }}
-                  onBlur={field.onBlur}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Category"
-                      placeholder="Select category"
-                      error={Boolean(errors.category)}
-                      helperText={errors.category?.message} />
-                  )}
-                />
-              )}
-            />
-
-            {/* Content */}
+ <Controller
+  name="category"
+  control={control}
+  render={({ field }) => (
+    <Autocomplete
+      options={categories}
+      loading={categoriesLoading}
+      disabled={loading || categoriesLoading || categoriesError}
+      getOptionLabel={(option) => option.name}
+      isOptionEqualToValue={(option, value) =>
+        String(option.id) === String(value.id)
+      }
+      value={
+        categories.find(
+          (category) =>
+            String(category.id) === field.value,
+        ) ?? null
+      }
+      onChange={(_, selectedCategory) => {
+        field.onChange(
+          selectedCategory
+            ? String(selectedCategory.id)
+            : "",
+        );
+      }}
+      onBlur={field.onBlur}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          inputRef={field.ref}
+          label="Category"
+          error={Boolean(errors.category) || categoriesError}
+          helperText={
+            categoriesError
+              ? "Could not load categories. Please reload."
+              : errors.category?.message
+          }
+        />
+      )}
+    />
+  )}
+/>
             <TextField
               label="Content"
               placeholder="Write your story..."
@@ -408,7 +420,7 @@ function BlogForm({
             }}
           >
             {loading
-              ? "Saving..."
+              ? "Uploading..."
               : submitLabel}
           </Button>
         </Stack>

@@ -84,10 +84,7 @@ const updateBlogsController = async (req, res, next) => {
       throw new AppError("Blog not found", 404);
     }
 
-    if (
-      Number(existingBlog.user_id) !== Number(userId) &&
-      req.user.role !== "admin"
-    ) {
+if (Number(existingBlog.user_id) !== Number(userId)) {
       throw new AppError(
         "You are not allowed to update this blog",
         403
@@ -203,10 +200,7 @@ const deleteBlogController = async (req, res, next) => {
       throw new AppError("Blog not found", 404);
     }
 
-    if (
-      Number(existingBlog.user_id) !== Number(userId) &&
-      req.user.role !== "admin"
-    ) {
+if (Number(existingBlog.user_id) !== Number(userId)) {
       throw new AppError(
         "You are not allowed to delete this blog",
         403
