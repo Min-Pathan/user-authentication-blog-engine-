@@ -6,11 +6,6 @@ function ProtectedRoute() {
     (state) => state.auth,
   );
 
-  console.log(
-    "ProtectedRoute auth:",
-    auth,
-  );
-
   if (!auth.isAuthenticated) {
     return (
       <Navigate

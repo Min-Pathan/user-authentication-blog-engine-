@@ -17,3 +17,21 @@ export const loginUser = async (data) => {
 
   return response.data;
 };
+
+export const forgotPassword = async(payload) => {
+  const response = await axiosInstance.post(
+     "/api/users/forgot-password",
+    payload
+  )
+
+  return response.data
+}
+
+export const resetPassword = async (payload) => {
+  const response = await axiosInstance.post(
+    "/api/users/reset-password",
+    payload,
+  );
+
+  return response.data;
+};

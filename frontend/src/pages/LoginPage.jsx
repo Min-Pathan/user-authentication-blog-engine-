@@ -243,6 +243,14 @@ function LoginPage() {
               Register
             </Typography>
           </Typography>
+          <Button
+  component={Link}
+  to="/forgot-password"
+  size="small"
+  sx={{ alignSelf: "flex-end" }}
+>
+  Forgot password?
+</Button>
         </Paper>
       </Container>
     </Box>

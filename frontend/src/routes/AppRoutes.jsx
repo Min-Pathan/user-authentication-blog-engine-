@@ -18,6 +18,8 @@ import CreateBlogPage from "../pages/dashboard/CreateBlogPage.jsx";
 import EditBlogPage from "../pages/dashboard/EditBlogPage.jsx";
 import ProfilePage from '../pages/dashboard/ProfilePage.jsx'
 import ProtectedRoute from './ProtectedRoute.jsx'
+import ForgotPasswordPage from '../pages/ForgotPasswordPage.jsx'
+import ResetPasswordPage from '../pages/ResetPasswordPage.jsx'
 
 const AppRoutes = () => {
     return (
@@ -56,38 +58,48 @@ const AppRoutes = () => {
                 />
 
                 <Route
+                    path="/forgot-password"
+                    element={<ForgotPasswordPage />}
+                />
+
+                <Route
+                    path="/reset-password"
+                    element={<ResetPasswordPage />}
+                />
+
+                <Route
                     path="*"
                     element={<NotFoundPage />}
                 />
             </Route>
-            <Route element={<ProtectedRoute/>}>
-            <Route
-                path="/dashboard"
-                element={<DashboardLayout />}
-            >
+            <Route element={<ProtectedRoute />}>
                 <Route
-                    index
-                    element={<DashboardPage />}
-                />
+                    path="/dashboard"
+                    element={<DashboardLayout />}
+                >
+                    <Route
+                        index
+                        element={<DashboardPage />}
+                    />
 
-                <Route
-                    path="my-blogs"
-                    element={<MyBlogsPage />}
-                />
-                <Route
-                    path="create"
-                    element={<CreateBlogPage />}
-                />
+                    <Route
+                        path="my-blogs"
+                        element={<MyBlogsPage />}
+                    />
+                    <Route
+                        path="create"
+                        element={<CreateBlogPage />}
+                    />
 
-                <Route
-                    path="blogs/:id/edit"
-                    element={<EditBlogPage />}
-                />
-                <Route
-                    path="profile"
-                    element={<ProfilePage />}
-                />
-            </Route>
+                    <Route
+                        path="blogs/:id/edit"
+                        element={<EditBlogPage />}
+                    />
+                    <Route
+                        path="profile"
+                        element={<ProfilePage />}
+                    />
+                </Route>
             </Route>
         </Routes>
     )
