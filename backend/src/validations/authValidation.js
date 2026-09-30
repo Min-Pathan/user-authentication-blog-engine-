@@ -46,3 +46,19 @@ export const loginSchema = z.object({
     })
     .min(1, "Password is required"),
 });
+
+export const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .email("Enter a valid email address")
+    .toLowerCase(),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/, "Invalid reset link"),
+
+  password: registerSchema.shape.password,
+});

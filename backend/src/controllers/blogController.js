@@ -47,16 +47,6 @@ const createBlogsController = async (req, res, next) => {
       category_id
     );
 
-console.log(
-  "req.body:",
-  req.body,
-);
-
-console.log(
-  "validated:",
-  req.validatedData,
-);
-
     return res.status(201).json({
       success: true,
       message: "Blog created successfully",
@@ -84,7 +74,7 @@ const updateBlogsController = async (req, res, next) => {
       throw new AppError("Blog not found", 404);
     }
 
-if (Number(existingBlog.user_id) !== Number(userId)) {
+    if (Number(existingBlog.user_id) !== Number(userId)) {
       throw new AppError(
         "You are not allowed to update this blog",
         403
@@ -149,9 +139,6 @@ if (Number(existingBlog.user_id) !== Number(userId)) {
       categoryId
     );
 
-    console.log("validated data:", data);
-    console.log("removeMedia:", removeMedia, typeof removeMedia);
-
     // Delete old Cloudinary asset only after DB update succeeds
     if ((req.file || removeMedia) && oldPublicId) {
       await deleteFromCloudinary(
@@ -200,7 +187,7 @@ const deleteBlogController = async (req, res, next) => {
       throw new AppError("Blog not found", 404);
     }
 
-if (Number(existingBlog.user_id) !== Number(userId)) {
+    if (Number(existingBlog.user_id) !== Number(userId)) {
       throw new AppError(
         "You are not allowed to delete this blog",
         403
@@ -244,8 +231,8 @@ const getAllBlogsController = async (req, res) => {
 
     page = parseInt(page, 10) || 1;
     limit = parseInt(limit, 10) || 6;
-     keyword = keyword?.trim() || "";
-     categoryId = categoryId ? parseInt(categoryId, 10) : null
+    keyword = keyword?.trim() || "";
+    categoryId = categoryId ? parseInt(categoryId, 10) : null
 
     const offset = (page - 1) * limit;
 

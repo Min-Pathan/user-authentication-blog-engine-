@@ -73,6 +73,7 @@ const loginUser = async (req, res, next) => {
       {
         id: user.id,
         role: user.role,
+         tokenVersion: user.token_version,
       },
       process.env.JWT_SECRET,
       { expiresIn: "7d" },
@@ -86,7 +87,7 @@ const loginUser = async (req, res, next) => {
     };
     res.status(200).json({
       success: true,
-      message: "successful",
+      message: "Logged in successfully",
       user: safeUser,
       token,
     });

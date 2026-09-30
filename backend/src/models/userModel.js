@@ -44,4 +44,63 @@ const deleteUser = async(id)=>{
   const result = await pool.query(query, [id]);
   return result.rows[0]
 }
-export { createUser, findUserByEmail, fetchUsers, updateUSer, deleteUser };
+
+const savePasswordResetToken = async(userId, tokenHash, expiresAt)=>{
+  await pool.query(
+    `update users set password_reset_token_hash =$1, password_reset_expires_at =$2
+    where id=$3`, 
+    [tokenHash, expiresAt, userId]
+  )
+} 
+
+const clearPasswordResetToken = async (
+  userId,
+  tokenHash,
+) => {
+  await pool.query(
+    `
+      UPDATE users
+      SET password_reset_token_hash = NULL,
+          password_reset_expires_at = NULL
+      WHERE id = $1
+        AND password_reset_token_hash = $2
+    `,
+    [userId, tokenHash],
+  );
+};
+
+const resetPasswordByToken = async (
+  tokenHash,
+  hashedPassword,
+) => {
+  const result = await pool.query(
+    `
+      UPDATE users
+      SET password = $1,
+          password_reset_token_hash = NULL,
+          password_reset_expires_at = NULL,
+          token_version = token_version + 1
+      WHERE password_reset_token_hash = $2
+        AND password_reset_expires_at > NOW()
+      RETURNING id
+    `,
+    [hashedPassword, tokenHash],
+  );
+
+  return result.rows[0];
+};
+
+const findUserAuthById = async (id) => {
+  const result = await pool.query(
+    `
+      SELECT id, role, token_version
+      FROM users
+      WHERE id = $1
+    `,
+    [id],
+  );
+
+  return result.rows[0];
+};
+
+export { createUser, findUserByEmail, fetchUsers, updateUSer, deleteUser, savePasswordResetToken, resetPasswordByToken, clearPasswordResetToken,findUserAuthById };
