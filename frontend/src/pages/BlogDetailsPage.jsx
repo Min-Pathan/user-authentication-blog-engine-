@@ -1,7 +1,6 @@
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 import {
-    Alert,
     Avatar,
     Box,
     Button,
@@ -20,7 +19,14 @@ import LikeButton from "../components/blogs/LikeButton.jsx";
 
 function BlogDetailsPage() {
     const { id } = useParams();
-    const { data, isLoading, isError, error } = useBlog(id);
+    const {
+        data,
+        isLoading,
+        isError,
+        error,
+        refetch,
+        isFetching,
+    } = useBlog(id);
     const blog = data?.blog;
 
     if (isLoading) {
@@ -44,10 +50,26 @@ function BlogDetailsPage() {
     if (isError && !isNotFound) {
         return (
             <Container maxWidth="md" sx={{ py: 8 }}>
-                <Alert severity="error">
-                    {error?.response?.data?.message ||
-                        "Failed to load blog."}
-                </Alert>
+                <Box
+                    sx={{
+                        py: 6,
+                        textAlign: "center",
+                    }}
+                >
+                    <Typography color="text.secondary">
+                        {error?.response?.data?.message ||
+                            "Could not load this blog. Please try again."}
+                    </Typography>
+
+                    <Button
+                        variant="outlined"
+                        sx={{ mt: 2 }}
+                        onClick={() => refetch()}
+                        disabled={isFetching}
+                    >
+                        Retry
+                    </Button>
+                </Box>
             </Container>
         );
     }

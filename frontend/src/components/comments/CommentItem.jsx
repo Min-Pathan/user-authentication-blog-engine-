@@ -3,7 +3,6 @@ import { useSelector } from "react-redux";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined"
 import {
-    Alert,
     Avatar,
     Box,
     Button,
@@ -21,19 +20,14 @@ import {
 
 import useCommentActions from
     "../../features/comments/mutations/useCommentActions.js";
-
-function getErrorMessage(error, fallback) {
-    if (error?.response?.status === 401) {
-        return "Your session has expired. Please log in again.";
-    }
-
-    return error?.response?.data?.message || fallback;
-}
+import { useToast } from "../../context/ToastContext.js";
 
 function CommentItem({ comment, blogId }) {
     const { user, isAuthenticated } = useSelector(
         (state) => state.auth,
     );
+
+    const { showToast } = useToast();
 
     const [isEditing, setIsEditing] = useState(false);
     const [editText, setEditText] = useState("");
@@ -62,7 +56,6 @@ function CommentItem({ comment, blogId }) {
     });
 
     const handleStartEdit = () => {
-        editMutation.reset();
         setEditText(comment.comment);
         setIsEditing(true);
     };
@@ -71,7 +64,6 @@ function CommentItem({ comment, blogId }) {
         if (isBusy) return;
 
         setIsEditing(false);
-        editMutation.reset();
     };
 
     const handleSave = (event) => {
@@ -95,12 +87,20 @@ function CommentItem({ comment, blogId }) {
                 onSuccess: () => {
                     setIsEditing(false);
                 },
+                onError: (error) => {
+                    if (error?.response?.status === 401) return;
+
+                    showToast(
+                        error?.response?.data?.message ||
+                            "Could not update your comment. Please try again.",
+                        "error",
+                    );
+                },
             },
         );
     };
 
     const handleOpenDelete = () => {
-        deleteMutation.reset();
         setDeleteOpen(true);
     };
 
@@ -108,7 +108,6 @@ function CommentItem({ comment, blogId }) {
         if (deleteMutation.isPending) return;
 
         setDeleteOpen(false);
-        deleteMutation.reset();
     };
 
     const handleDelete = () => {
@@ -117,6 +116,15 @@ function CommentItem({ comment, blogId }) {
         deleteMutation.mutate(comment.id, {
             onSuccess: () => {
                 setDeleteOpen(false);
+            },
+            onError: (error) => {
+                if (error?.response?.status === 401) return;
+
+                showToast(
+                    error?.response?.data?.message ||
+                        "Could not delete your comment. Please try again.",
+                    "error",
+                );
             },
         });
     };
@@ -167,10 +175,9 @@ function CommentItem({ comment, blogId }) {
                                 <TextField
                                     label="Edit comment"
                                     value={editText}
-                                    onChange={(event) => {
-                                        setEditText(event.target.value);
-                                        editMutation.reset();
-                                    }}
+                                    onChange={(event) =>
+                                        setEditText(event.target.value)
+                                    }
                                     multiline
                                     rows={3}
                                     fullWidth
@@ -178,15 +185,6 @@ function CommentItem({ comment, blogId }) {
                                     error={trimmedText.length > 200}
                                     helperText={`${trimmedText.length}/200 characters · Minimum 2`}
                                 />
-
-                                {editMutation.isError && (
-                                    <Alert severity="error" sx={{ mt: 2 }}>
-                                        {getErrorMessage(
-                                            editMutation.error,
-                                            "Could not update your comment.",
-                                        )}
-                                    </Alert>
-                                )}
 
                                 <Stack
                                     direction="row"
@@ -294,15 +292,6 @@ function CommentItem({ comment, blogId }) {
                     <DialogContentText>
                         This comment will be permanently deleted.
                     </DialogContentText>
-
-                    {deleteMutation.isError && (
-                        <Alert severity="error" sx={{ mt: 2 }}>
-                            {getErrorMessage(
-                                deleteMutation.error,
-                                "Could not delete your comment.",
-                            )}
-                        </Alert>
-                    )}
                 </DialogContent>
 
                 <DialogActions>

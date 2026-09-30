@@ -35,6 +35,8 @@ function EditBlogPage() {
     isLoading,
     isError,
     error,
+    refetch,
+    isFetching,
   } = useBlog(id);
 
   const {
@@ -80,13 +82,13 @@ function EditBlogPage() {
 
       navigate("/dashboard/my-blogs");
     } catch (requestError) {
-      const message =
-        requestError?.response?.status === 401
-          ? "Your session has expired. Please log in again."
-          : requestError?.response?.data?.message ||
-          "Could not update your blog. Please try again.";
+      if (requestError?.response?.status === 401) return;
 
-      showToast(message, "error");
+      showToast(
+        requestError?.response?.data?.message ||
+        "Could not update your blog. Please try again.",
+        "error",
+      );
     }
   };
 
@@ -130,9 +132,21 @@ function EditBlogPage() {
       {isLoading ? (
         <BlogDetailsSkeleton />
       ) : isError ? (
-        <Alert severity="error">
-          {error?.response?.data?.message || "Failed to load blog."}
-        </Alert>
+        <Box sx={{ py: 6, textAlign: "center" }}>
+          <Typography color="text.secondary">
+            {error?.response?.data?.message ||
+              "Could not load this blog. Please try again."}
+          </Typography>
+
+          <Button
+            variant="outlined"
+            sx={{ mt: 2 }}
+            onClick={() => refetch()}
+            disabled={isFetching}
+          >
+            Retry
+          </Button>
+        </Box>
       ) : !blog ? (
         <Alert severity="info">Blog not found.</Alert>
       ) : !canEdit ? (

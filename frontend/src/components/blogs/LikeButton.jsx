@@ -5,7 +5,6 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 
 import {
-  Alert,
   Box,
   Button,
 } from "@mui/material";
@@ -16,8 +15,11 @@ import useBlogLikes from
 import useToggleLike from
   "../../features/likes/mutations/useToggleLike.js";
 
+import { useToast } from "../../context/ToastContext.js";
+
 function LikeButton({ blogId, initialCount = 0 }) {
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const { user, isAuthenticated } = useSelector(
     (state) => state.auth,
@@ -30,16 +32,11 @@ function LikeButton({ blogId, initialCount = 0 }) {
     isLoading,
     isFetching,
     isError,
-    error,
-    refetch,
   } = useBlogLikes(blogId, userId, isAuthenticated);
 
   const {
     mutate,
     isPending,
-    isError: isToggleError,
-    error: toggleError,
-    reset,
   } = useToggleLike(blogId, userId);
 
   const liked =
@@ -54,13 +51,6 @@ function LikeButton({ blogId, initialCount = 0 }) {
     isAuthenticated &&
     (isLoading || isFetching || isPending);
 
-  const currentError = isAuthenticated
-    ? (toggleError || error)
-    : null;
-
-  const showError =
-    isAuthenticated && (isError || isToggleError);
-
   const handleLike = () => {
     if (!isAuthenticated) {
       navigate("/login");
@@ -69,13 +59,17 @@ function LikeButton({ blogId, initialCount = 0 }) {
 
     if (busy || isError) return;
 
-    reset();
-    mutate();
-  };
+    mutate(undefined, {
+      onError: (error) => {
+        if (error?.response?.status === 401) return;
 
-  const handleRefreshStatus = () => {
-    reset();
-    void refetch();
+        showToast(
+          error?.response?.data?.message ||
+          "Could not update your like. Please try again.",
+          "error",
+        );
+      },
+    });
   };
 
   return (
@@ -110,28 +104,6 @@ function LikeButton({ blogId, initialCount = 0 }) {
       >
         {count}
       </Button>
-
-      {showError && (
-        <Alert
-          severity="error"
-          sx={{ mt: 1 }}
-          action={
-            <Button
-              color="inherit"
-              size="small"
-              onClick={handleRefreshStatus}
-              disabled={busy}
-            >
-              Refresh
-            </Button>
-          }
-        >
-          {currentError?.response?.status === 401
-            ? "Your session has expired. Please log in again."
-            : currentError?.response?.data?.message ||
-              "Could not update or load likes. Refresh to check the saved status."}
-        </Alert>
-      )}
     </Box>
   );
 }

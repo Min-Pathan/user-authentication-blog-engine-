@@ -1,6 +1,5 @@
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import { Link } from "react-router";
 import {
   Avatar,
@@ -12,6 +11,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import LikeButton from "../blogs/LikeButton";
 
 function FeaturedStory({ blog }) {
   const {
@@ -23,8 +23,6 @@ function FeaturedStory({ blog }) {
     created_at,
     media_url,
     media_type,
-    like_count,
-    comment_count,
   } = blog;
 
   const formattedDate = new Date(created_at).toLocaleDateString(
@@ -260,7 +258,7 @@ function FeaturedStory({ blog }) {
               {/* Likes and comments */}
               <Stack
                 direction="row"
-                spacing={2}
+                spacing={0}
                 sx={{
                   mt: 2.5,
                   color: "text.secondary",
@@ -271,15 +269,11 @@ function FeaturedStory({ blog }) {
                   spacing={0.5}
                   alignItems="center"
                 >
-                  <FavoriteBorderIcon
-                    sx={{
-                      fontSize: 19,
-                    }}
+                  <LikeButton
+                    key={blog.id}
+                    blogId={blog.id}
+                    initialCount={blog.like_count}
                   />
-
-                  <Typography variant="body2">
-                    {like_count ?? 0}
-                  </Typography>
                 </Stack>
 
                 <Stack
@@ -287,15 +281,15 @@ function FeaturedStory({ blog }) {
                   spacing={0.5}
                   alignItems="center"
                 >
-                  <ChatBubbleOutlineIcon
-                    sx={{
-                      fontSize: 19,
-                    }}
-                  />
-
-                  <Typography variant="body2">
-                    {comment_count ?? 0}
-                  </Typography>
+                  <Button
+                    component={Link}
+                    to={`/blogs/${blog.id}#comments`}
+                    startIcon={<ChatBubbleOutlineIcon />}
+                    aria-label={`View comments on ${blog.title}`}
+                    sx={{ color: "text.secondary" }}
+                  >
+                    {blog.comment_count ?? 0}
+                  </Button>
                 </Stack>
               </Stack>
 

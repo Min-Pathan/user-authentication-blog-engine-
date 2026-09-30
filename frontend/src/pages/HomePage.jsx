@@ -5,8 +5,8 @@ import {
 } from "react";
 
 import {
-  Alert,
   Box,
+  Button,
   Container,
   Typography,
 } from "@mui/material";
@@ -44,9 +44,10 @@ function HomePage() {
   const {
     data,
     isLoading,
-    isFetching,
     isError,
     error,
+    refetch,
+    isFetching,
 
     fetchNextPage,
     hasNextPage,
@@ -122,10 +123,7 @@ function HomePage() {
     isFetchingNextPage,
   ]);
 
-  const showMainSkeleton =
-    isLoading ||
-    (isFetching &&
-      !isFetchingNextPage);
+const showMainSkeleton = isLoading;
 
   const handleSearch = () => {
     setKeyword(
@@ -188,11 +186,27 @@ function HomePage() {
             count={3}
           />
         ) : isError ? (
-          <Alert severity="error">
-            {error?.response
-              ?.data?.message ||
-              "Failed to load blogs."}
-          </Alert>
+          <Box
+            sx={{
+              py: 6,
+              textAlign: "center",
+            }}
+          >
+            <Typography color="text.secondary">
+              {error?.response
+                ?.data?.message ||
+                "Could not load blogs. Please try again."}
+            </Typography>
+
+            <Button
+              variant="outlined"
+              sx={{ mt: 2 }}
+              onClick={() => refetch()}
+              disabled={isFetching}
+            >
+              Retry
+            </Button>
+          </Box>
         ) : blogs.length ===
           0 ? (
           <Box

@@ -62,7 +62,6 @@ const LatestStories = ({ blogs }) => {
                     }}
                 >
                     {blogs.map((blog) => (
-
                         <BlogCard key={blog.id} blog={blog} />
                     ))}
                 </Box>

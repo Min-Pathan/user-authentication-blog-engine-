@@ -1,5 +1,4 @@
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 
 import {
   Avatar,
@@ -11,7 +10,9 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import LikeButton from "../blogs/LikeButton";
 import { Link } from "react-router";
+import { Button } from "@mui/material";
 
 function BlogCard({ blog }) {
   const {
@@ -22,8 +23,6 @@ function BlogCard({ blog }) {
     created_at,
     media_url,
     media_type,
-    like_count,
-    comment_count,
   } = blog;
 
   const formattedDate = new Date(created_at).toLocaleDateString(
@@ -246,15 +245,11 @@ function BlogCard({ blog }) {
               spacing={0.5}
               alignItems="center"
             >
-              <FavoriteBorderIcon
-                sx={{
-                  fontSize: 18,
-                }}
+              <LikeButton
+                key={blog.id}
+                blogId={blog.id}
+                initialCount={blog.like_count}
               />
-
-              <Typography variant="body2">
-                {like_count ?? 0}
-              </Typography>
             </Stack>
 
             <Stack
@@ -262,15 +257,15 @@ function BlogCard({ blog }) {
               spacing={0.5}
               alignItems="center"
             >
-              <ChatBubbleOutlineIcon
-                sx={{
-                  fontSize: 18,
-                }}
-              />
-
-              <Typography variant="body2">
-                {comment_count ?? 0}
-              </Typography>
+            <Button
+  component={Link}
+  to={`/blogs/${blog.id}#comments`}
+  startIcon={<ChatBubbleOutlineIcon />}
+  aria-label={`View comments on ${blog.title}`}
+  sx={{ color: "text.secondary" }}
+>
+  {blog.comment_count ?? 0}
+</Button>
             </Stack>
           </Stack>
         </Stack>

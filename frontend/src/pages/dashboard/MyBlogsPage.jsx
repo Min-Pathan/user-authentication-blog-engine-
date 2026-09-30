@@ -2,7 +2,6 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 
 import {
-  Alert,
   Box,
   Button,
   Chip,
@@ -34,7 +33,7 @@ function MyBlogsPage() {
 
   const [itemPerPage, setItemPerPage] = useState(6);
 
-  const { mutate: removeBlog, isPending: isDeleting, error: deleteError, reset: resetDelete } = useDeleteBlog();
+  const { mutate: removeBlog, isPending: isDeleting } = useDeleteBlog();
   const [blogToDelete, setBlogToDelete] = useState(null);
 
   const {
@@ -43,6 +42,7 @@ function MyBlogsPage() {
     isError,
     error,
     refetch,
+    isFetching,
   } = useMyBlogs({
     page, limit: itemPerPage
   });
@@ -51,7 +51,6 @@ function MyBlogsPage() {
   const totalBlogs = data?.totalBlogs ?? 0;
 
   const handleDeleteClick = (blog) => {
-    resetDelete();
     setBlogToDelete(blog);
   };
 
@@ -59,7 +58,6 @@ function MyBlogsPage() {
     if (isDeleting) return;
 
     setBlogToDelete(null);
-    resetDelete();
   };
 
   const handleConfirmDelete = () => {
@@ -78,6 +76,15 @@ function MyBlogsPage() {
         if (myBlogs.length === 1 && page > 1) {
           setPage((previous) => previous - 1);
         }
+      },
+      onError: (error) => {
+        if (error?.response?.status === 401) return;
+
+        showToast(
+          error?.response?.data?.message ||
+          "Could not delete your blog. Please try again.",
+          "error",
+        );
       },
     });
   };
@@ -139,24 +146,21 @@ function MyBlogsPage() {
           ))}
         </Stack>
       ) : isError ? (
-        <Alert
-          severity="error"
-          action={
-            <Button
-              color="inherit"
-              size="small"
-              onClick={() => refetch()}
-            >
-              Retry
-            </Button>
-          }
-        >
-          {error?.response?.status === 401
-            ? "Your session has expired. Please log in again."
-            : error?.response?.data?.message ||
-            error?.message ||
-            "Failed to load your blogs."}
-        </Alert>
+        <Box sx={{ py: 6, textAlign: "center" }}>
+          <Typography color="text.secondary">
+            {error?.response?.data?.message ||
+              "Could not load your blogs. Please try again."}
+          </Typography>
+
+          <Button
+            variant="outlined"
+            sx={{ mt: 2 }}
+            onClick={() => refetch()}
+            disabled={isFetching}
+          >
+            Retry
+          </Button>
+        </Box>
       ) : myBlogs.length > 0 ? (
         <>
           <Stack spacing={2}>
@@ -392,15 +396,6 @@ function MyBlogsPage() {
             <strong>{blogToDelete?.title}</strong>?
             This cannot be undone.
           </DialogContentText>
-
-          {deleteError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {deleteError?.response?.status === 401
-                ? "Your session has expired. Please log in again."
-                : deleteError?.response?.data?.message ||
-                "Could not delete this blog. Please try again."}
-            </Alert>
-          )}
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 3 }}>

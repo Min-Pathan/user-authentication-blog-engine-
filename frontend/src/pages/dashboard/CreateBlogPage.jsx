@@ -1,6 +1,5 @@
 
 import {
-  Alert,
   Box,
   Typography,
 } from "@mui/material";
@@ -8,7 +7,6 @@ import {
 import { useNavigate } from 'react-router'
 
 import BlogForm from "../../components/blogs/BlogForm.jsx";
-import { useState } from "react";
 import { useToast } from "../../context/ToastContext.js";
 import useCreateBlog from "../../features/blogs/mutations/useCreateBlog.js";
 
@@ -16,7 +14,6 @@ import useCreateBlog from "../../features/blogs/mutations/useCreateBlog.js";
 function CreateBlogPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const [submitError, setSubmitError] = useState("");
 
   const {
     mutateAsync: submitBlog,
@@ -28,7 +25,6 @@ function CreateBlogPage() {
   ) => {
     if (isPending) return;
 
-    setSubmitError('');
     const formData = new FormData();
     formData.append("title", values.title);
     formData.append("content", values.content);
@@ -43,12 +39,13 @@ function CreateBlogPage() {
       navigate("/dashboard/my-blogs")
     }
     catch (error) {
-      const message = error?.response?.status === 401 ?
-        "Your session has expired. Please log in again"
-        : error?.response?.data?.message ||
-        "Could not create your blog. Please try again.";
-      setSubmitError(message);
-      showToast(message, "error");
+      if (error?.response?.status === 401) return;
+
+      showToast(
+        error?.response?.data?.message ||
+        "Could not create your blog. Please try again.",
+        "error",
+      );
     }
   };
 
@@ -78,11 +75,6 @@ function CreateBlogPage() {
           Write and publish a new story.
         </Typography>
       </Box>
-      {submitError && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {submitError}
-        </Alert>
-      )}
 
       <BlogForm
         submitLabel="Create Blog"

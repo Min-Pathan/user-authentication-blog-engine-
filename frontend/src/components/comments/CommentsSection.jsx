@@ -14,18 +14,17 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import useCreateComment from "../../features/comments/mutations/useCreateComment";
 import { Link } from "react-router";
+import { useToast } from "../../context/ToastContext.js";
 import CommentItem from "./CommentItem";
 
 function CommentsSection({ blogId }) {
   const [commentText, setCommentText] = useState("");
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const { showToast } = useToast();
 
 const {
   mutate: postComment,
   isPending: isPosting,
-  isError: isPostError,
-  error: postError,
-  reset: resetPostStatus,
 } = useCreateComment();
 
   const trimmedComment = commentText.trim();
@@ -41,12 +40,27 @@ const {
       {
         onSuccess: () => {
           setCommentText("")
-        }
+        },
+        onError: (error) => {
+          if (error?.response?.status === 401) return;
+
+          showToast(
+            error?.response?.data?.message ||
+            "Could not post your comment. Please try again.",
+            "error",
+          );
+        },
       }
     )
   }
-  const { data, isLoading, isError, error } =
-    useComments(blogId);
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useComments(blogId);
 
   const comments = data?.comments ?? [];
 
@@ -81,10 +95,7 @@ const {
             label="Your comment"
             placeholder="Write a comment..."
             value={commentText}
-            onChange={(event) => {
-              setCommentText(event.target.value);
-              resetPostStatus();
-            }}
+            onChange={(event) => setCommentText(event.target.value)}
             multiline
             rows={3}
             fullWidth
@@ -92,16 +103,6 @@ const {
             error={trimmedComment.length > 200}
             helperText={`${trimmedComment.length}/200 characters · Minimum 2`}
           />
-
-          {isPostError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {postError?.response?.status === 401
-                ? "Your session has expired. Please log in again."
-                : postError?.response?.data?.message ||
-                "Could not post your comment. Please try again."}
-            </Alert>
-          )}
-
 
           <Stack
             direction="row"
@@ -162,10 +163,21 @@ const {
       )}
 
       {isError && (
-        <Alert severity="error">
-          {error?.response?.data?.message ||
-            "Failed to load comments."}
-        </Alert>
+        <Box sx={{ py: 4, textAlign: "center" }}>
+          <Typography color="text.secondary">
+            {error?.response?.data?.message ||
+              "Could not load comments. Please try again."}
+          </Typography>
+
+          <Button
+            variant="outlined"
+            sx={{ mt: 2 }}
+            onClick={() => refetch()}
+            disabled={isFetching}
+          >
+            Retry
+          </Button>
+        </Box>
       )}
 
       {!isLoading && !isError && comments.length > 0 && (
