@@ -1,8 +1,14 @@
-import { NavLink, useNavigate } from "react-router";
+import { Link, NavLink, useNavigate } from "react-router";
 import { useState } from "react";
 
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
+import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
+import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 
 import {
   AppBar,
@@ -15,6 +21,7 @@ import {
   IconButton,
   List,
   ListItemButton,
+  ListItemIcon,
   ListItemText,
   Stack,
   Toolbar,
@@ -43,7 +50,29 @@ const navItems = [
     label: "Contact",
     path: "/contact",
   },
+];
 
+const accountMenuItems = [
+  {
+    label: "Dashboard",
+    path: "/dashboard",
+    icon: DashboardOutlinedIcon,
+  },
+  {
+    label: "My Blogs",
+    path: "/dashboard/my-blogs",
+    icon: ArticleOutlinedIcon,
+  },
+  {
+    label: "Create Blog",
+    path: "/dashboard/create",
+    icon: AddBoxOutlinedIcon,
+  },
+  {
+    label: "Profile",
+    path: "/dashboard/profile",
+    icon: PersonOutlineIcon,
+  },
 ];
 
 function Navbar() {
@@ -51,9 +80,18 @@ function Navbar() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useSelector((state) => state.auth)
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileAnchorEl, setProfileAnchorEl] = useState(null);
+  const profileOpen = Boolean(profileAnchorEl);
 
+  const userInitial = user?.username?.charAt(0).toUpperCase() || "U";
 
+  const handleProfileOpen = (event) => {
+    setProfileAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileClose = () => {
+    setProfileAnchorEl(null);
+  };
   const handleLogout = () => {
     clearAuth();
     dispatch(clearCredentials())
@@ -69,14 +107,6 @@ function Navbar() {
   const handleCloseDrawer = () => {
     setDrawerOpen(false);
   };
-
-  const handleProfileOpen = () => {
-    setProfileOpen(true)
-  };
-
-  const handleProfileClose = () => {
-    setProfileOpen(false)
-  }
 
   return (
     <>
@@ -100,11 +130,13 @@ function Navbar() {
             {/* Logo */}
             <Typography
               variant="h6"
+              component={Link}
+              to="/"
               sx={{
                 fontWeight: 800,
                 color: "text.primary",
                 letterSpacing: "-0.03em",
-                cursor: "pointer",
+                textDecoration: "none",
               }}
             >
               Blogger
@@ -167,28 +199,28 @@ function Navbar() {
                 spacing={1.5}
                 alignItems="center"
               >
-
-                <Button component={NavLink}
-                  to="/dashboard" color="inherit"
+                <Button
+                  component={NavLink}
+                  to="/dashboard/create"
+                  variant="contained"
+                  disableElevation
+                  startIcon={<EditOutlinedIcon />}
                   sx={{
-                    color: "text.secondary",
-                    fontWeight: 600,
-
-                    "&.active": {
-                      color: "primary.main",
+                    display: {
+                      xs: "none",
+                      md: "inline-flex",
                     },
-
-                    "&:hover": {
-                      color: "primary.main",
-                      bgcolor: "transparent",
-                    },
-                  }}>
-                  Dashboard
+                  }}
+                >
+                  Write
                 </Button>
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  alignItems="center"
+
+                <IconButton
+                  onClick={handleProfileOpen}
+                  aria-label="Open account menu"
+                  aria-controls={profileOpen ? "profile-menu" : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={profileOpen ? "true" : undefined}
                 >
                   <Avatar
                     sx={{
@@ -197,64 +229,92 @@ function Navbar() {
                       bgcolor: "primary.main",
                       fontSize: "0.9rem",
                     }}
-                    onClick={handleProfileOpen}
                   >
-                    {user?.username
-                      ?.charAt(0)
-                      .toUpperCase() || "U"}
+                    {userInitial}
                   </Avatar>
+                </IconButton>
 
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontWeight: 600,
-                    }}
-                  >
-                    {user?.username}
-                  </Typography>
-                </Stack>
-
-                {profileOpen && (
-                  <Menu
-                    anchorEl={profileOpen}
-                    open={Boolean(profileOpen)}
-                    onClose={handleProfileClose}
-                    anchorOrigin={{
-                      vertical: 'bottom',
-                      horizontal: 'center'
-                    }}
-                    transformOrigin={{
-                      vertical: 'top',
-                      horizontal: "center"
-                    }}
-                    sx={{
-                      pointerEvents: 'none',
-                      '& .MuiMenu-paper': {
-                        pointerEvents: 'auto',
-                      },
-                    }}
-                  >
-                    <MenuItem>
-                      Profile
-                    </MenuItem>
-                    <MenuItem>
-                      <Button
-                        color="inherit"
-                        onClick={handleLogout}
+                <Menu
+                  id="profile-menu"
+                  anchorEl={profileAnchorEl}
+                  open={profileOpen}
+                  onClose={handleProfileClose}
+                  anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "right",
+                  }}
+                  transformOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                  }}
+                >
+                  {/* User header */}
+                  <Box sx={{ px: 2, py: 1.25 }}>
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <Avatar
                         sx={{
-                          color: "text.secondary",
-
-                          "&:hover": {
-                            color: "error.main",
-                            bgcolor: "transparent",
-                          },
+                          width: 36,
+                          height: 36,
+                          bgcolor: "primary.main",
+                          fontSize: "0.9rem",
                         }}
                       >
-                        Logout
-                      </Button>
-                    </MenuItem>
-                  </Menu>
-                )}
+                        {userInitial}
+                      </Avatar>
+
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography sx={{ fontWeight: 600 }} noWrap>
+                          {user?.username || "User"}
+                        </Typography>
+
+                        {user?.email && (
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            noWrap
+                          >
+                            {user.email}
+                          </Typography>
+                        )}
+                      </Box>
+                    </Stack>
+                  </Box>
+
+                  <Divider sx={{ my: 0.5 }} />
+
+                  {accountMenuItems.map((item) => {
+                    const Icon = item.icon;
+
+                    return (
+                      <MenuItem
+                        key={item.path}
+                        component={NavLink}
+                        to={item.path}
+                        onClick={handleProfileClose}
+                      >
+                        <ListItemIcon>
+                          <Icon fontSize="small" />
+                        </ListItemIcon>
+                        {item.label}
+                      </MenuItem>
+                    );
+                  })}
+
+                  <Divider sx={{ my: 0.5 }} />
+
+                  <MenuItem
+                    onClick={() => {
+                      handleProfileClose();
+                      handleLogout();
+                    }}
+                    sx={{ color: "error.main" }}
+                  >
+                    <ListItemIcon>
+                      <LogoutOutlinedIcon fontSize="small" />
+                    </ListItemIcon>
+                    Logout
+                  </MenuItem>
+                </Menu>
               </Stack>
 
             ) :
@@ -337,9 +397,14 @@ function Navbar() {
           >
             <Typography
               variant="h6"
+              component={Link}
+              to="/"
+              onClick={handleCloseDrawer}
               sx={{
                 fontWeight: 800,
                 letterSpacing: "-0.03em",
+                color: "text.primary",
+                textDecoration: "none",
               }}
             >
               Blogger
@@ -366,6 +431,42 @@ function Navbar() {
               my: 2,
             }}
           />
+
+          {/* User header */}
+          {isAuthenticated && (
+            <>
+              <Stack direction="row" spacing={1.5} alignItems="center">
+                <Avatar
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    bgcolor: "primary.main",
+                    fontWeight: 600,
+                  }}
+                >
+                  {userInitial}
+                </Avatar>
+
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography sx={{ fontWeight: 600 }} noWrap>
+                    {user?.username || "User"}
+                  </Typography>
+
+                  {user?.email && (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      noWrap
+                    >
+                      {user.email}
+                    </Typography>
+                  )}
+                </Box>
+              </Stack>
+
+              <Divider sx={{ my: 2 }} />
+            </>
+          )}
 
           {/* Mobile Navigation */}
           <List disablePadding>
@@ -401,60 +502,101 @@ function Navbar() {
             ))}
           </List>
 
-          <Divider sx={{ my: 2 }} />
+          {isAuthenticated && (
+            <>
+              <Divider sx={{ my: 2 }} />
 
-          {isAuthenticated ? (
-            <Stack spacing={1}>
-              <Button
-                component={NavLink}
-                to="/dashboard"
-                onClick={() =>
-                  setDrawerOpen(false)
-                }
-                fullWidth
-                sx={{
-                  justifyContent: "flex-start",
-                }}
-              >
-                Dashboard
-              </Button>
+              {/* Account Navigation */}
+              <List disablePadding>
+                {accountMenuItems.map((item) => {
+                  const Icon = item.icon;
+
+                  return (
+                    <ListItemButton
+                      key={item.path}
+                      component={NavLink}
+                      to={item.path}
+                      onClick={handleCloseDrawer}
+                      sx={{
+                        borderRadius: 2,
+                        mb: 0.5,
+                        color: "text.primary",
+
+                        "&.active": {
+                          bgcolor: "#EFF6FF",
+                          color: "primary.main",
+                        },
+
+                        "&:hover": {
+                          bgcolor: "action.hover",
+                          color: "primary.main",
+                        },
+                      }}
+                    >
+                      <ListItemIcon
+                        sx={{
+                          minWidth: 36,
+                          color: "inherit",
+                        }}
+                      >
+                        <Icon fontSize="small" />
+                      </ListItemIcon>
+
+                      <ListItemText
+                        primary={item.label}
+                        primaryTypographyProps={{
+                          fontWeight: 500,
+                        }}
+                      />
+                    </ListItemButton>
+                  );
+                })}
+              </List>
 
               <Button
                 color="error"
-                onClick={handleLogout}
                 fullWidth
+                startIcon={<LogoutOutlinedIcon />}
+                onClick={handleLogout}
                 sx={{
                   justifyContent: "flex-start",
+                  mt: 1,
                 }}
               >
                 Logout
               </Button>
-            </Stack>
-          ) : (
-            <Stack spacing={1}>
-              <Button
-                component={NavLink}
-                to="/login"
-                onClick={() =>
-                  setDrawerOpen(false)
-                }
-                fullWidth
-              >
-                Login
-              </Button>
+            </>
+          )}
 
-              <Button
-                component={NavLink}
-                to="/register"
-                onClick={() =>
-                  setDrawerOpen(false)
-                }
-                variant="contained"
-                fullWidth
-              >
-                Register
-              </Button>
-            </Stack>
+          {!isAuthenticated && (
+            <>
+              <Divider sx={{ my: 2 }} />
+
+              <Stack spacing={1}>
+                <Button
+                  component={NavLink}
+                  to="/login"
+                  onClick={() =>
+                    setDrawerOpen(false)
+                  }
+                  fullWidth
+                >
+                  Login
+                </Button>
+
+                <Button
+                  component={NavLink}
+                  to="/register"
+                  onClick={() =>
+                    setDrawerOpen(false)
+                  }
+                  variant="contained"
+                  fullWidth
+                >
+                  Register
+                </Button>
+              </Stack>
+            </>
           )}
         </Box>
       </Drawer>

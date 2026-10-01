@@ -4,6 +4,7 @@ import {
   deleteUser,
   fetchUsers,
   findUserByEmail,
+  findUserProfileById,
   updateUSer,
 } from "../models/userModel.js";
 import jwt from "jsonwebtoken";
@@ -96,17 +97,20 @@ const loginUser = async (req, res, next) => {
   }
 };
 
-const profileUSer = (req, res) => {
+const profileUSer = async (req, res, next) => {
   try {
+    const user = await findUserProfileById(req.user.id);
+
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+
     res.status(200).json({
-      msg: "protected route accessed",
-      user: req.user,
+      success: true,
+      user,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error,
-    });
+    next(error);
   }
 };
 
@@ -156,7 +160,6 @@ const getAllUsers = async (req, res) => {
       data: result.rows,
     });
   } catch (err) {
-    console.log("errrr:::", err);
     res.status(500).json({ err: err.message });
   }
 };
@@ -191,87 +194,49 @@ const getUserById = async (req, res) => {
   }
 };
 
-const updateUserController = async (req, res) => {
+const updateUserController = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const loggedInUser = req.user;
-    if (loggedInUser.role != "admin" && id != loggedInUser.id) {
-      return res.status(403).json({
-        success: false,
-        message: "You are not authrized to update this user",
-      });
+    const id = Number(req.params.id);
+
+    if (!Number.isSafeInteger(id) || id < 1) {
+      throw new AppError("Invalid user ID", 400);
     }
 
-    const { username, email, phone } = req.body;
-
-    // check user exists
-    const existingUser = await pool.query(`SELECT * FROM users WHERE id = $1`, [
-      id,
-    ]);
-
-    if (existingUser.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
+    if (id !== Number(req.user.id)) {
+      throw new AppError(
+        "You can only update your own profile",
+        403,
+      );
     }
 
-    // check duplicate email
-    if (email) {
-      const emailExists = await findUserByEmail(email);
+    const { username, email, phone } = req.validatedData;
 
-      if (emailExists && emailExists.id !== Number(id)) {
-        return res.status(400).json({
-          success: false,
-          message: "Email already assigned to another user",
-        });
-      }
+    const emailOwner = await findUserByEmail(email);
+
+    if (emailOwner && Number(emailOwner.id) !== id) {
+      throw new AppError("Email is already in use", 409);
     }
 
-    let fields = [];
+    const user = await updateUSer(username, email, phone, id);
 
-    let values = [];
-
-    let index = 1;
-
-    if (username) {
-      fields.push(`username = $${index}`);
-      values.push(username);
-      index++;
+    if (!user) {
+      throw new AppError("User not found", 404);
     }
 
-    if (email) {
-      fields.push(`email = $${index}`);
-      values.push(email);
-      index++;
-    }
-
-    if(phone){
-      fields.push(`phone = $${index}`);
-      values.push(phone);
-      index++
-    }
-    values.push(id);
-
-    const query = `
-      UPDATE users
-      SET ${fields.join(", ")}
-      WHERE id = $${index}
-      RETURNING id, username, email, phone, role
-    `;
-
-    const result = await updateUSer(query, values);
-
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      message: "User updated successfully",
-      user: result.rows[0],
+      message: "Profile updated successfully",
+      user,
     });
-  } catch (err) {
-    return res.status(500).json({
-      success: false,
-      err: err.message,
-    });
+  } catch (error) {
+    // Also handles concurrent duplicate-email submissions.
+    if (error.code === "23505") {
+      return next(
+        new AppError("Username or email is already in use", 409),
+      );
+    }
+
+    next(error);
   }
 };
 

@@ -308,6 +308,69 @@ const deleteBlog = async (id) => {
 
   return result.rows[0];
 };
+
+const getDashboardStats = async (userId) => {
+  const result = await pool.query(
+    `
+      SELECT
+        (
+          SELECT COUNT(*)
+          FROM blogs
+          WHERE user_id = $1
+        ) AS total_blogs,
+        (
+          SELECT COUNT(*)
+          FROM likes l
+          JOIN blogs b ON b.id = l.blog_id
+          WHERE b.user_id = $1
+        ) AS total_likes,
+        (
+          SELECT COUNT(*)
+          FROM comments c
+          JOIN blogs b ON b.id = c.blog_id
+          WHERE b.user_id = $1
+        ) AS total_comments
+    `,
+    [userId],
+  );
+
+  const row = result.rows[0];
+
+  return {
+    totalBlogs: Number(row.total_blogs),
+    totalLikes: Number(row.total_likes),
+    totalComments: Number(row.total_comments),
+  };
+};
+
+const getDashboardRecentBlogs = async (userId) => {
+  const result = await pool.query(
+    `
+      SELECT
+        b.id,
+        b.title,
+        b.created_at,
+        c.name AS category,
+        (
+          SELECT COUNT(*)
+          FROM likes l
+          WHERE l.blog_id = b.id
+        ) AS like_count
+      FROM blogs b
+      LEFT JOIN categories c ON c.id = b.category_id
+      WHERE b.user_id = $1
+      ORDER BY b.created_at DESC, b.id DESC
+      LIMIT 3
+    `,
+    [userId],
+  );
+
+  return result.rows.map((blog) => ({
+    ...blog,
+    like_count: Number(blog.like_count),
+  }));
+};
+
 export {
   createBlogs,
   getAllBlogs,
@@ -316,5 +379,7 @@ export {
   getBlogById,
   updateBlog,
   deleteBlog,
-  getMyBlogsCount
+  getMyBlogsCount,
+  getDashboardRecentBlogs,
+  getDashboardStats
 };

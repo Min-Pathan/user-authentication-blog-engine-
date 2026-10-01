@@ -2,7 +2,7 @@ import express from "express";
 import { registerUser, loginUser, profileUSer, getAllUsers, getUserById, updateUserController, deleteUserController } from "../controllers/userController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import roleMiddleWare from "../middlewares/roleMiddleware.js";
-import { loginSchema, registerSchema, forgotPasswordSchema, resetPasswordSchema, } from "../validations/authValidation.js";
+import { loginSchema, registerSchema, forgotPasswordSchema, resetPasswordSchema, updateProfileSchema, } from "../validations/authValidation.js";
 import validate from "../middlewares/validateMiddleware.js";
 import {
     forgotPassword,
@@ -31,7 +31,14 @@ router.post(
     validate(resetPasswordSchema),
     resetPassword,
 );
-router.get("/profile", authMiddleware, roleMiddleWare("admin"), profileUSer)
+router.get("/profile", authMiddleware, profileUSer);
+
+router.put(
+  "/:id",
+  authMiddleware,
+  validate(updateProfileSchema),
+  updateUserController,
+);
 router.get("/", authMiddleware, roleMiddleWare("admin"), getAllUsers)
 router.get("/:id", authMiddleware, getUserById)
 router.put("/:id", authMiddleware, updateUserController)

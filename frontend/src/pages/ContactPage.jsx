@@ -1,3 +1,4 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
 
@@ -10,12 +11,66 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { useToast } from "../context/ToastContext";
+import useSendContact from "../features/contact/queries/useSendContact";
+
+const contactSchema = z.object({
+  name: z.string().trim()
+    .min(2, "Name must contain at least 2 characters")
+    .max(80, "Name cannot exceed 80 characters"),
+
+  email: z.string().trim()
+    .email("Enter a valid email address")
+    .max(254, "Email is too long")
+    .toLowerCase(),
+
+  subject: z.string().trim()
+    .min(3, "Subject must contain at least 3 characters")
+    .max(150, "Subject cannot exceed 150 characters")
+    .regex(/^[^\r\n]*$/, "Subject must be a single line"),
+
+  message: z.string().trim()
+    .min(10, "Message must contain at least 10 characters")
+    .max(5000, "Message cannot exceed 5000 characters"),
+});
 
 function ContactPage() {
-  const handleSubmit = (event) => {
-    event.preventDefault();
+  const { showToast } = useToast();
+  const { mutate, isPending } = useSendContact();
 
-    console.log("Contact form UI only");
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(contactSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      subject: "",
+      message: "",
+    },
+  });
+
+  const onSubmit = (values) => {
+    if (isPending) return;
+
+    mutate(values, {
+      onSuccess: (response) => {
+        showToast(response.message, "success");
+        reset();
+      },
+      onError: (error) => {
+        showToast(
+          error?.response?.data?.message ||
+          "Could not send your message. Please try again.",
+          "error",
+        );
+      },
+    });
   };
 
   return (
@@ -125,7 +180,7 @@ function ContactPage() {
                       fontWeight: 600,
                     }}
                   >
-                    hello@blogger.com
+                    minaz@blogger.com
                   </Typography>
                 </Box>
               </Stack>
@@ -194,29 +249,52 @@ function ContactPage() {
 
             <Box
               component="form"
-              onSubmit={handleSubmit}
+              noValidate
+              onSubmit={handleSubmit(onSubmit)}
             >
               <Stack spacing={2.5}>
                 <TextField
                   label="Name"
+                  {...register("name")}
+                  error={Boolean(errors.name)}
+                  helperText={errors.name?.message}
+                  autoComplete="name"
+                  disabled={isPending}
+                  required
                   fullWidth
                 />
 
                 <TextField
                   label="Email"
                   type="email"
+                  {...register("email")}
+                  error={Boolean(errors.email)}
+                  helperText={errors.email?.message}
+                  autoComplete="email"
+                  disabled={isPending}
+                  required
                   fullWidth
                 />
 
                 <TextField
                   label="Subject"
+                  {...register("subject")}
+                  error={Boolean(errors.subject)}
+                  helperText={errors.subject?.message}
+                  disabled={isPending}
+                  required
                   fullWidth
                 />
 
                 <TextField
                   label="Message"
+                  {...register("message")}
+                  error={Boolean(errors.message)}
+                  helperText={errors.message?.message}
                   multiline
                   rows={6}
+                  disabled={isPending}
+                  required
                   fullWidth
                 />
 
@@ -225,6 +303,7 @@ function ContactPage() {
                   variant="contained"
                   size="large"
                   disableElevation
+                  disabled={isPending}
                   sx={{
                     alignSelf: {
                       xs: "stretch",
@@ -233,7 +312,7 @@ function ContactPage() {
                     px: 4,
                   }}
                 >
-                  Send message
+                  {isPending ? "Sending..." : "Send message"}
                 </Button>
               </Stack>
             </Box>

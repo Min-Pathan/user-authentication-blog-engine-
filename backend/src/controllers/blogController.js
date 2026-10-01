@@ -9,6 +9,7 @@ import {
   getMyBlogs,
   getMyBlogsCount,
   updateBlog,
+  getDashboardRecentBlogs, getDashboardStats
 } from "../models/blogModel.js";
 
 import AppError from '../Errors/AppError.js'
@@ -325,8 +326,26 @@ const getBlogByIdController = async (req, res, next) => {
       blog,
     });
   } catch (error) {
-    console.log(error)
     next(error)
+  }
+};
+
+const getDashboardController = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    const [stats, recentBlogs] = await Promise.all([
+      getDashboardStats(userId),
+      getDashboardRecentBlogs(userId),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      stats,
+      recentBlogs,
+    });
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -337,4 +356,5 @@ export {
   getMyBlogsController,
   getBlogByIdController,
   deleteBlogController,
+  getDashboardController
 };

@@ -26,15 +26,23 @@ const fetchUsers = async (query, values) => {
 };
 
 const updateUSer = async (username, email, phone, id) => {
-  const query = `
-    UPDATE users
-    SET username = $1 or
-        email = $2 or phone = $3
-    WHERE id = $4
-    RETURNING id, username, email, phone, role
-  `;
-
-  const result = await pool.query(query, [username, email, phone, id]);
+  const result = await pool.query(
+    `
+      UPDATE users
+      SET username = $1,
+          password_reset_token_hash =
+            CASE WHEN email IS DISTINCT FROM $2
+              THEN NULL ELSE password_reset_token_hash END,
+          password_reset_expires_at =
+            CASE WHEN email IS DISTINCT FROM $2
+              THEN NULL ELSE password_reset_expires_at END,
+          email = $2,
+          phone = $3
+      WHERE id = $4
+      RETURNING id, username, email, phone, role
+    `,
+    [username, email, phone, id],
+  );
 
   return result.rows[0];
 };
@@ -103,4 +111,11 @@ const findUserAuthById = async (id) => {
   return result.rows[0];
 };
 
-export { createUser, findUserByEmail, fetchUsers, updateUSer, deleteUser, savePasswordResetToken, resetPasswordByToken, clearPasswordResetToken,findUserAuthById };
+
+const findUserProfileById = async(id) =>{
+  const result = await pool.query(
+    `select id, username, email, phone, role from users where id=$1`, [id]
+  )
+  return result.rows[0]
+}
+export { createUser, findUserByEmail, fetchUsers, updateUSer, deleteUser, savePasswordResetToken, resetPasswordByToken, clearPasswordResetToken,findUserAuthById, findUserProfileById };

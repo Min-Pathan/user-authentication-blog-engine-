@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 
 let transporter;
-const sendEmail = async ({ to, subject, text }) => {
+const sendEmail = async ({ to, subject, text, replyTo }) => {
     const { SMTP_HOST,
         SMTP_PORT,
         SMTP_USER,
@@ -39,6 +39,7 @@ const sendEmail = async ({ to, subject, text }) => {
         to,
         subject,
         text,
+        ...(replyTo ? {replyTo} : {})
     })
 }
 

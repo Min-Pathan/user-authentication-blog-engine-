@@ -62,3 +62,7 @@ export const resetPasswordSchema = z.object({
 
   password: registerSchema.shape.password,
 });
+
+export const updateProfileSchema  = registerSchema.pick({
+  username:true, email:true, phone:true
+})

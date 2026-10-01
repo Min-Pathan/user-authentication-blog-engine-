@@ -1,5 +1,5 @@
 import express from "express";
-import { createBlogsController, deleteBlogController, getAllBlogsController, getBlogByIdController, getMyBlogsController, updateBlogsController } from "../controllers/blogController.js";
+import { createBlogsController, deleteBlogController, getAllBlogsController, getBlogByIdController, getDashboardController, getMyBlogsController, updateBlogsController } from "../controllers/blogController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import { getCommentsByBlogIdController } from "../controllers/commentController.js";
 import uploadBlogMedia from "../middlewares/blogMediaUploadMiddleware.js";
@@ -24,6 +24,11 @@ router.put(
 );
 router.get("/my-blogs", authMiddleware, getMyBlogsController)
 router.get("/:id/comments", getCommentsByBlogIdController);
+router.get(
+  "/dashboard",
+  authMiddleware,
+  getDashboardController,
+);
 router.get("/:id", getBlogByIdController);
 router.get("/", getAllBlogsController);
 router.delete("/:id", authMiddleware, deleteBlogController)

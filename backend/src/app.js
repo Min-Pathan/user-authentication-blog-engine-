@@ -7,6 +7,7 @@ import path from "path"
 
 import userRoutes from "./routes/userRoutes.js"
 import blogRoutes from "./routes/blogRoutes.js"
+import contactRoutes from "./routes/contactRoutes.js";
 import commentRoutes from "./routes/commentRoutes.js"
 import likeRoutes from "./routes/likeRoutes.js"
 import uploadRoutes from "./routes/uploadRoutes.js"
@@ -49,6 +50,7 @@ app.get("/", (req, res)=>{
 
 app.use("/api/users", userRoutes)
 app.use("/api/blogs", blogRoutes)
+app.use("/api/contact", contactRoutes);
 app.use("/api/comments", commentRoutes)
 app.use("/api/likes", likeRoutes)
 app.use("/api/uploads", uploadRoutes);
