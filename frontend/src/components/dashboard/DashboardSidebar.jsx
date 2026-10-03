@@ -12,21 +12,10 @@ import {
 } from "@mui/material";
 
 import {
-  useDispatch,
-} from "react-redux";
-
-import {
   NavLink,
-  useNavigate,
 } from "react-router";
 
-import {
-  clearCredentials,
-} from "../../features/auth/authSlice.js";
-
-import {
-  clearAuth,
-} from "../../features/auth/authStorage.js";
+import useLogout from "../../features/auth/useLogout.js";
 
 const menuItems = [
   {
@@ -52,20 +41,13 @@ const menuItems = [
 ];
 
 function DashboardSidebar({ onNavigate }) {
-  const dispatch = useDispatch();
-const navigate = useNavigate();
+  const logout = useLogout();
 
-const handleLogout = () => {
-  clearAuth();
+  const handleLogout = () => {
+    onNavigate?.();
 
-  dispatch(
-    clearCredentials(),
-  );
-
-  onNavigate?.();
-
-  navigate("/login");
-};
+    logout();
+  };
   return (
     <Box
       sx={{

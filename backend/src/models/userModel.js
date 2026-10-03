@@ -98,6 +98,17 @@ const resetPasswordByToken = async (
   return result.rows[0];
 };
 
+const incrementTokenVersion = async (id) => {
+  await pool.query(
+    `
+      UPDATE users
+      SET token_version = token_version + 1
+      WHERE id = $1
+    `,
+    [id],
+  );
+};
+
 const findUserAuthById = async (id) => {
   const result = await pool.query(
     `
@@ -118,4 +129,4 @@ const findUserProfileById = async(id) =>{
   )
   return result.rows[0]
 }
-export { createUser, findUserByEmail, fetchUsers, updateUSer, deleteUser, savePasswordResetToken, resetPasswordByToken, clearPasswordResetToken,findUserAuthById, findUserProfileById };
+export { createUser, findUserByEmail, fetchUsers, updateUSer, deleteUser, savePasswordResetToken, resetPasswordByToken, clearPasswordResetToken, findUserAuthById, findUserProfileById, incrementTokenVersion };

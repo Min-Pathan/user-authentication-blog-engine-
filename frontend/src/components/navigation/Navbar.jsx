@@ -1,4 +1,4 @@
-import { Link, NavLink, useNavigate } from "react-router";
+import { Link, NavLink } from "react-router";
 import { useState } from "react";
 
 import MenuIcon from "@mui/icons-material/Menu";
@@ -29,9 +29,8 @@ import {
   MenuItem,
   Menu
 } from "@mui/material";
-import { useDispatch, useSelector } from "react-redux";
-import { clearAuth } from "../../features/auth/authStorage";
-import { clearCredentials } from "../../features/auth/authSlice";
+import { useSelector } from "react-redux";
+import useLogout from "../../features/auth/useLogout";
 
 const navItems = [
   {
@@ -76,9 +75,8 @@ const accountMenuItems = [
 ];
 
 function Navbar() {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
   const { user, isAuthenticated } = useSelector((state) => state.auth)
+  const logout = useLogout();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
   const profileOpen = Boolean(profileAnchorEl);
@@ -93,11 +91,9 @@ function Navbar() {
     setProfileAnchorEl(null);
   };
   const handleLogout = () => {
-    clearAuth();
-    dispatch(clearCredentials())
     setDrawerOpen(false);
 
-    navigate("/login")
+    logout();
   }
 
   const handleOpenDrawer = () => {

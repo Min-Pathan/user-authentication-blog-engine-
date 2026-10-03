@@ -1,5 +1,5 @@
 import express from "express";
-import { registerUser, loginUser, profileUSer, getAllUsers, getUserById, updateUserController, deleteUserController } from "../controllers/userController.js";
+import { registerUser, loginUser, logoutUser, profileUSer, getAllUsers, getUserById, updateUserController, deleteUserController } from "../controllers/userController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import roleMiddleWare from "../middlewares/roleMiddleware.js";
 import { loginSchema, registerSchema, forgotPasswordSchema, resetPasswordSchema, updateProfileSchema, } from "../validations/authValidation.js";
@@ -31,6 +31,7 @@ router.post(
     validate(resetPasswordSchema),
     resetPassword,
 );
+router.post("/logout", authMiddleware, logoutUser);
 router.get("/profile", authMiddleware, profileUSer);
 
 router.put(

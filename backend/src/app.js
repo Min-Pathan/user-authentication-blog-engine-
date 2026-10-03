@@ -2,7 +2,6 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import logger from "./middlewares/logger.js";
-import pool from "./config/db.js";
 import path from "path"
 
 import userRoutes from "./routes/userRoutes.js"
@@ -18,10 +17,23 @@ import helmet from "helmet";
 import apiLimiter from "./middlewares/rateLimitMiddleware.js";
 import hpp from "hpp";
 
+// Comma-separated list of browser origins allowed to call the API,
+// e.g. CORS_ORIGIN=http://localhost:5173,http://localhost:5174
+const allowedOrigins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+if (allowedOrigins.length === 0) {
+  throw new Error(
+    "CORS_ORIGIN is missing or empty, please add it to your .env file",
+  );
+}
+
 const app = express();
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: allowedOrigins,
   credentials:true,
   methods:[
      "GET",
@@ -60,16 +72,5 @@ app.use("/api/categories", categoryRoutes);
 app.use(notFoundMiddleware);
 
 app.use(errorMiddleware)
-pool.query("SELECT NOW()", (err, res) => {
-  if (err) {
-    console.log("Database connection error:", err);
-  } else {
-    console.log("Database connected");
-    console.log(res.rows);
-  }
-});
 
-const port = process.env.PORT
-app.listen(port, ()=>{
-     console.log(`Server running on port ${port}`);
-})
+export default app;

@@ -5,6 +5,7 @@ import {
   fetchUsers,
   findUserByEmail,
   findUserProfileById,
+  incrementTokenVersion,
   updateUSer,
 } from "../models/userModel.js";
 import jwt from "jsonwebtoken";
@@ -94,6 +95,21 @@ const loginUser = async (req, res, next) => {
     });
   } catch (error) {
     return next(error);
+  }
+};
+
+const logoutUser = async (req, res, next) => {
+  try {
+    // Bump token_version so every JWT issued before this
+    // logout is rejected by authMiddleware from now on.
+    await incrementTokenVersion(req.user.id);
+
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -260,6 +276,7 @@ const deleteUserController = async (req, res) => {
 export {
   registerUser,
   loginUser,
+  logoutUser,
   profileUSer,
   getAllUsers,
   getUserById,

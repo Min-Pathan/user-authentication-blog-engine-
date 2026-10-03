@@ -24,9 +24,10 @@ axiosInstance.interceptors.response.use(
     const request = error.config;
     const url = request?.url || "";
 
-    // Incorrect login credentials should remain a form error.
+    // Incorrect login credentials should remain a form error,
+    // and logout owns its own cleanup (useLogout).
     const isAuthRequest =
-      /\/users\/(login|register)\/?(?:\?|$)/.test(url);
+      /\/users\/(login|register|logout)\/?(?:\?|$)/.test(url);
 
     const currentToken = localStorage.getItem("accessToken");
     const requestToken = request?.headers?.Authorization;

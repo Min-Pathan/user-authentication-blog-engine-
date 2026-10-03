@@ -1,4 +1,5 @@
 
+import { lazy } from 'react'
 import { Route, Routes } from 'react-router'
 import HomePage from '../pages/HomePage'
 import MainLayout from '../layouts/MainLayout'
@@ -12,14 +13,17 @@ import BlogDetailsPage from '../pages/BlogDetailsPage'
 
 import DashboardLayout from "../layouts/DashboardLayout.jsx";
 
-import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
-import MyBlogsPage from "../pages/dashboard/MyBlogsPage.jsx";
-import CreateBlogPage from "../pages/dashboard/CreateBlogPage.jsx";
-import EditBlogPage from "../pages/dashboard/EditBlogPage.jsx";
-import ProfilePage from '../pages/dashboard/ProfilePage.jsx'
 import ProtectedRoute from './ProtectedRoute.jsx'
 import ForgotPasswordPage from '../pages/ForgotPasswordPage.jsx'
 import ResetPasswordPage from '../pages/ResetPasswordPage.jsx'
+
+// Dashboard pages are code-split so public visitors only
+// download them when they actually open the dashboard.
+const DashboardPage = lazy(() => import("../pages/dashboard/DashboardPage.jsx"));
+const MyBlogsPage = lazy(() => import("../pages/dashboard/MyBlogsPage.jsx"));
+const CreateBlogPage = lazy(() => import("../pages/dashboard/CreateBlogPage.jsx"));
+const EditBlogPage = lazy(() => import("../pages/dashboard/EditBlogPage.jsx"));
+const ProfilePage = lazy(() => import('../pages/dashboard/ProfilePage.jsx'));
 
 const AppRoutes = () => {
     return (

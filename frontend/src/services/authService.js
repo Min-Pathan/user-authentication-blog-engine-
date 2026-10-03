@@ -35,3 +35,11 @@ export const resetPassword = async (payload) => {
 
   return response.data;
 };
+
+export const logoutUser = async () => {
+  const response = await axiosInstance.post(
+    "/api/users/logout",
+  );
+
+  return response.data;
+};

@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
 import MenuIcon from "@mui/icons-material/Menu";
 
 import {
   Box,
+  CircularProgress,
   Drawer,
   IconButton,
   Typography,
@@ -133,7 +134,23 @@ function DashboardLayout() {
               },
             }}
           >
-            <Outlet />
+            {/* Lazy dashboard pages suspend here while their
+                chunk loads; the navbar and sidebar stay mounted. */}
+            <Suspense
+              fallback={
+                <Box
+                  sx={{
+                    display: "grid",
+                    placeItems: "center",
+                    minHeight: 300,
+                  }}
+                >
+                  <CircularProgress />
+                </Box>
+              }
+            >
+              <Outlet />
+            </Suspense>
           </Box>
         </Box>
       </Box>
